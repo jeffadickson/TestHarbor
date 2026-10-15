@@ -1,0 +1,33 @@
+# Development tasks
+
+Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain stable; linked GitHub issues track upcoming work.
+
+- [x] TH-001 — Independent multi-resource coordinator and race tests.
+- [x] TH-002 — Per-test scoped services and async cleanup.
+- [x] TH-003 — Public NUnit fixture lifecycle integration.
+- [x] TH-004 — Runnable simulated instrument example.
+- [x] TH-005 — XML/HTML API documentation and locked build.
+- [x] TH-006 — Explicit setup/body/teardown/disposal failure verification.
+- [ ] TH-007 — Attribute ergonomics without internal NUnit access. Handle inheritance,
+  overloaded methods, generic tests, and parameterized cases without ambiguous reflection.
+- [x] TH-008 — Ordered extension pipeline. Define before/after nesting, rollback on partial
+  setup, cleanup failure aggregation and async cancellation rules before implementation.
+- [x] TH-009 — Resource quarantine policy. Failed hardware cleanup must support refusing
+  later owners until an operator or recovery action clears the fault.
+- [ ] TH-010 — Fixture and run service scopes. Specify parallel sharing and ownership,
+  prove cleanup when only a subset of tests is selected, and keep explicit per-test defaults.
+- [x] TH-011 — Diagnostics: lease wait time, owner/test IDs, held duration, cancellation,
+  and blocked-resource snapshots with public NUnit progress output. Automated leak detection remains future work.
+- [ ] TH-012 — Cross-process broker. Fenced leases, heartbeat expiry, crash recovery,
+  and tests proving two host processes cannot use the same device concurrently.
+- [ ] TH-013 — Runtime-generated test feasibility. Evaluate public adapter capabilities;
+  preserve wrapper-only constraint. Use TestCaseSource when discovery-time data suffices.
+- [ ] TH-014 — Validate CI on Windows and macOS; currently local verification is Linux only.
+- [ ] TH-015 — Add supported NUnit/.NET version matrix, package identity and release policy.
+
+## GitHub tracking
+
+- TH-007: [issue #1](https://github.com/jeffadickson/TestHarbor/issues/1)
+- TH-010: [issue #2](https://github.com/jeffadickson/TestHarbor/issues/2)
+- TH-012: [issue #3](https://github.com/jeffadickson/TestHarbor/issues/3)
+- TH-013: [issue #4](https://github.com/jeffadickson/TestHarbor/issues/4)

@@ -1,0 +1,35 @@
+name: build-and-test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: dotnet restore TestHarbor.sln --locked-mode
+      - run: dotnet test TestHarbor.sln -c Release --no-restore --logger trx
+      - run: python tools/verify_failure_probes.py
+      - run: python tools/build_docs.py
+      - run: dotnet pack src/TestHarbor -c Release --no-restore
+      - run: dotnet pack src/TestHarbor.NUnit -c Release --no-restore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: testharbor-${{ matrix.os }}
+          path: |
+            **/TestResults/*.trx
+            src/**/bin/Release/*.nupkg
+            docs/api.html
+          if-no-files-found: warn
