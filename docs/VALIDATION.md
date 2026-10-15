@@ -41,9 +41,9 @@ XML coverage: 178 authored declarations with zero failures; the expanded HTML re
 
 ## 0.3 release-candidate evidence
 
-Local .NET 10 Release validation completed with zero warnings/errors. The normal suite passes 56 tests plus ten runnable example cases. The XML audit covers 425 authored declarations with zero gaps. The HTML reference covers all seven C# projects.
+Local .NET 10 Release validation completed with zero warnings/errors. The normal suite passes 56 tests plus ten runnable example cases. The XML audit covers 426 authored declarations with zero gaps. The HTML reference covers all seven C# projects.
 
-External verifiers additionally check four intentional lifecycle failures, nine conformance scenarios (including conditions before acquisition), stable filtered source-case replay, filtered shared-fixture ownership, four retained attachments in both TRX and NUnit XML, and cross-process broker exclusion/fencing/crash recovery/heartbeat-expiry quarantine. All three NuGet packages include XML documentation and a clean temporary consumer restores and executes them.
+External verifiers additionally check four intentional lifecycle failures, ten conformance scenarios (including conditions before acquisition and NUnit CancelAfter with failing cleanup), stable filtered source-case replay, filtered shared-fixture ownership, four retained attachments in both TRX and NUnit XML, and cross-process broker exclusion/fencing/crash recovery/heartbeat-expiry quarantine. All three NuGet packages include XML documentation and a clean temporary consumer restores and executes them.
 
 Compatibility is limited to the pinned NUnit/.NET baseline and documented wrapper semantics. The new CI workflow runs these gates on Linux, Windows and macOS. The Actions run associated with the 0.3 commit supplies its platform evidence; prior run links above are historical validation only. See WRAPPER-BOUNDARIES.md for explicit feasibility decisions and single-host broker limits.
 

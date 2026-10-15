@@ -18,8 +18,8 @@ with tempfile.TemporaryDirectory(prefix='testharbor-conformance-') as directory:
         raise SystemExit(result.stdout + result.stderr)
     ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
     outcomes = ET.parse(report).findall('.//t:UnitTestResult', ns)
-    assert len(outcomes) == 9, result.stdout
-    for mode in ('pass', 'skip', 'assume', 'start', 'stop', 'cancel'):
+    assert len(outcomes) == 10, result.stdout
+    for mode in ('pass', 'skip', 'assume', 'start', 'stop', 'cancel', 'deadline'):
         outcome = next(x for x in outcomes if f'("{mode}")' in x.attrib['testName'])
         expected = 'Passed' if mode == 'pass' else 'NotExecuted' if mode in ('skip', 'assume') else 'Failed'
         assert outcome.attrib['outcome'] == expected, ET.tostring(outcome)
@@ -29,4 +29,4 @@ with tempfile.TemporaryDirectory(prefix='testharbor-conformance-') as directory:
         outcome = next(x for x in outcomes if f'("{mode}")' in x.attrib['testName'])
         assert outcome.attrib['outcome'] == ('Failed' if mode == 'conditionFail' else 'NotExecuted')
         assert not (Path(directory) / (mode + '.txt')).exists(), 'Condition acquired hardware or initialized services'
-    print('PASS: nine conformance scenarios; exact event ordering, retained leases and final runner outcomes verified.')
+    print('PASS: ten conformance scenarios; exact event ordering, retained leases and final runner outcomes verified.')

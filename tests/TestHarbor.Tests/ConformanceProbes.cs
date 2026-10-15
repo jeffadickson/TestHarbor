@@ -48,6 +48,16 @@ public sealed class ConformanceProbes : HarborFixture
         if (mode == "skip") Assert.Ignore("conformance-skip");
         if (mode == "assume") Assume.That(false, Is.True, "conformance-assume");
     }
+    /// <summary>Exercises NUnit's cooperative deadline and subsequent failing cleanup.</summary>
+    /// <param name="mode">Scenario name used for independent lifecycle evidence.</param>
+    /// <returns>A task cancelled by NUnit's test token.</returns>
+    [TestCase("deadline")]
+    [CancelAfter(500)]
+    public async Task Deadline(string mode)
+    {
+        Record(mode, "body");
+        await Task.Delay(Timeout.Infinite, TestContext.CurrentContext.CancellationToken);
+    }
     /// <summary>Records derived teardown while ownership remains active.</summary>
     [TearDown]
     public void Teardown() => Record(Mode, "teardown");
@@ -55,14 +65,14 @@ public sealed class ConformanceProbes : HarborFixture
     [OneTimeTearDown]
     public static void VerifyRelease()
     {
-        foreach (var mode in new[] { "pass", "skip", "assume", "start", "stop", "cancel" })
+        foreach (var mode in new[] { "pass", "skip", "assume", "start", "stop", "cancel", "deadline" })
         {
             var state = ResourceCoordinator.Shared.GetSnapshot().SingleOrDefault(x => x.Name == "Conformance/" + mode);
             Assert.That(state is null || (!state.Exclusive && state.Readers == 0), Is.True);
-            if (mode == "stop")
+            if (mode is "stop" or "deadline")
             {
                 Assert.That(state?.QuarantineReason, Is.Not.Null);
-                ResourceCoordinator.Shared.ResetQuarantine("Conformance/stop", "Simulation recovery verified.");
+                ResourceCoordinator.Shared.ResetQuarantine("Conformance/" + mode, "Simulation recovery verified.");
             }
         }
     }
@@ -98,7 +108,7 @@ public sealed class ConformanceProbes : HarborFixture
         public Task StopAsync(TestExtensionContext context)
         {
             Record(mode, "stop");
-            if (mode == "stop") throw new IOException("conformance-stop");
+            if (mode is "stop" or "deadline") throw new IOException("conformance-stop");
             return Task.CompletedTask;
         }
         /// <summary>Records service disposal after extension stop.</summary>
