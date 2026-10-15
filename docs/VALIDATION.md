@@ -72,3 +72,14 @@ can run the cases in parallel without shared test state.
 
 The expanded normal suite contains 56 library tests plus 18 example cases (74 total).
 Issue #18 records the corresponding full verification and three-platform CI results.
+
+## Charger authoring comparison
+
+Six additional normal cases run the same simulated driver and load-regulation requirement through
+plain NUnit manual ownership and a TestHarbor fixture with named resources and a reusable profile.
+The two versions own separate physical simulations; they do not pretend different coordination
+mechanisms share ownership. The example distinguishes basic manual cleanup from TestHarbor's
+quarantine policy rather than claiming identical failure guarantees.
+
+The normal suite now contains 56 library tests plus 24 example cases (80 total).
+Issue #19 records the corresponding three-platform CI evidence.

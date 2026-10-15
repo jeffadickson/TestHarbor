@@ -45,3 +45,5 @@ The remaining JG requirements are implemented or resolved by explicit wrapper-bo
 - [x] TH-016 — One-command local/CI verification, SDK diagnosis and contributor onboarding ([issue #17](https://github.com/jeffadickson/TestHarbor/issues/17)).
 
 - [x] TH-017 — Expanded instrument acceptance suite and explanatory logs ([issue #18](https://github.com/jeffadickson/TestHarbor/issues/18)); see [bench demonstration](BENCH-DEMO.md).
+
+- [x] TH-018 — Runnable plain NUnit/TestHarbor charger comparison and benefit walkthrough ([issue #19](https://github.com/jeffadickson/TestHarbor/issues/19)).

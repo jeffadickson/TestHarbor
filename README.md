@@ -6,6 +6,18 @@ TestHarbor is a companion wrapper around NUnit. NUnit remains responsible for di
 assertions, execution, filtering, and reports. No NUnit fork, internal API references,
 reflection into NUnit, command replacement, or custom test engine is used.
 
+## Why use it?
+
+A test might only need to say “apply a 1 A load and check that this charger stays near 5 V.”
+The suite also has to prevent two tests from changing the same instruments, wait for shutdown
+before the next test starts, and refuse reuse if shutdown fails. TestHarbor supplies those
+resource and cleanup policies around ordinary NUnit tests.
+
+Start with the [plain NUnit versus TestHarbor charger example](docs/WHY-TESTHARBOR.md).
+Both versions run the same measurement; the walkthrough shows what TestHarbor removes from
+the fixture and what it adds on failure. For pure unit tests without shared resources,
+plain NUnit is usually sufficient.
+
 ## Run it
 
 Install a .NET 10 SDK and Python 3. Run the complete CI checks locally:

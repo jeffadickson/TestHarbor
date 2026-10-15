@@ -1,5 +1,8 @@
 # Supply and electronic-load acceptance demonstration
 
+Start with [what TestHarbor adds to NUnit](WHY-TESTHARBOR.md) for a short side-by-side
+authoring example. This page covers the deeper ownership and failure acceptance tests.
+
 This is a runnable example of the work TestHarbor removes from an instrument test suite.
 NUnit remains the runner: it discovers parameterized cases, schedules them, evaluates assertions,
 and produces results and attachments. TestHarbor supplies reusable resource and cleanup policies.
