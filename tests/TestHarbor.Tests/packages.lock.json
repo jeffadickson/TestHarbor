@@ -126,7 +126,13 @@
         "type": "Project",
         "dependencies": {
           "NUnit": "[5.0.0, )",
-          "TestHarbor": "[0.1.0-alpha.1, )"
+          "TestHarbor": "[0.2.1-alpha.1, )"
+        }
+      },
+      "testharbor.testing": {
+        "type": "Project",
+        "dependencies": {
+          "TestHarbor": "[0.2.1-alpha.1, )"
         }
       }
     }

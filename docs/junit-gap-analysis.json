@@ -1,5 +1,5 @@
 {
-  "baseline": "JUnit 6.1.3 / NUnit 5.0.0 / TestHarbor 0.2.1",
+  "baseline": "JUnit 6.1.3 / NUnit 5.0.0 / TestHarbor 0.3.0-alpha.1",
   "reviewed": "2026-10-15",
   "sources": {
     "J0": "https://docs.junit.org/6.1.3/overview.html",
@@ -47,7 +47,21 @@
     "L5": "../tools/verify_failure_probes.py",
     "L6": "../tools/TestHarbor.DocCheck/Program.cs",
     "L7": "../.github/workflows/ci.yml",
-    "L8": "../src/TestHarbor.NUnit/RequiresResourceAttribute.cs"
+    "L8": "../src/TestHarbor.NUnit/RequiresResourceAttribute.cs",
+    "L9": "../src/TestHarbor.NUnit/HarborCases.cs",
+    "L10": "../src/TestHarbor/TestConfiguration.cs",
+    "L11": "../src/TestHarbor/SessionBudgets.cs",
+    "L12": "../tests/TestHarbor.Tests/DiscoveryBoundaryTests.cs",
+    "L13": "../src/TestHarbor/HarborContext.cs",
+    "L14": "../src/TestHarbor/ServiceInvocation.cs",
+    "L15": "../src/TestHarbor/TestServiceScope.cs",
+    "L16": "../src/TestHarbor/LifecycleObservation.cs",
+    "L17": "../src/TestHarbor/ExtensionProfile.cs",
+    "L18": "../src/TestHarbor/OwnedResources.cs",
+    "L19": "../src/TestHarbor/ArtifactStore.cs",
+    "L20": "../src/TestHarbor.Testing/ExtensionProbe.cs",
+    "L21": "../docs/COMPATIBILITY.md",
+    "L22": "../src/TestHarbor/FileResourceBroker.cs"
   },
   "features": [
     {
@@ -145,14 +159,15 @@
       "category": "Core",
       "feature": "Display names and name generation",
       "junit": "DisplayName and generators",
-      "current": "NUnit case names supported; no TestHarbor reusable naming policy",
+      "current": "HarborCases supplies deterministic source-derived names and case IDs; general JUnit naming generators are not emulated",
       "status": "P",
       "requirements": [
         "JG-007"
       ],
       "sources": [
         "J2",
-        "N3"
+        "N3",
+        "L9"
       ]
     },
     {
@@ -175,14 +190,15 @@
       "category": "Core",
       "feature": "Conditional execution",
       "junit": "OS/runtime/env/custom conditions",
-      "current": "NUnit Platform/Ignore/Assume exist; no unified Harbor conditions or config precedence",
-      "status": "P",
+      "current": "Pure ExecutionCondition evaluation precedes resource/service acquisition; typed configuration has explicit precedence and redacted diagnostics",
+      "status": "H",
       "requirements": [
         "JG-005"
       ],
       "sources": [
         "J3",
-        "N0"
+        "N0",
+        "L10"
       ]
     },
     {
@@ -205,15 +221,16 @@
       "category": "Core",
       "feature": "Instance lifecycle defaults",
       "junit": "Per-method default; optional per-class",
-      "current": "NUnit defaults shared; HarborFixture sets per-case, but callers can override it unsafely",
-      "status": "P",
+      "current": "HarborFixture enforces InstancePerTestCase and rejects hidden lifecycle hooks; repeat/retry use fresh instances",
+      "status": "H",
       "requirements": [
         "JG-010"
       ],
       "sources": [
         "J26",
         "N5",
-        "L3"
+        "L3",
+        "L11"
       ]
     },
     {
@@ -266,14 +283,15 @@
       "category": "Data",
       "feature": "CSV, enum, null and empty conveniences",
       "junit": "Built-in argument sources",
-      "current": "NUnit sources can supply data; reusable typed CSV/conversion helpers absent",
-      "status": "P",
+      "current": "HarborCases includes quoted CSV, enum and null/empty sources with explicit invariant conversion",
+      "status": "H",
       "requirements": [
         "JG-007"
       ],
       "sources": [
         "J4",
-        "N3"
+        "N3",
+        "L9"
       ]
     },
     {
@@ -281,14 +299,15 @@
       "category": "Data",
       "feature": "Argument conversion and aggregation",
       "junit": "Converters and aggregators",
-      "current": "NUnit typed TestCaseData and custom sources; no Harbor conversion contract",
+      "current": "Typed source converters and service-bound delegates are explicit; arbitrary JUnit aggregator injection is not emulated",
       "status": "P",
       "requirements": [
         "JG-007"
       ],
       "sources": [
         "J4",
-        "N1"
+        "N1",
+        "L9"
       ]
     },
     {
@@ -342,7 +361,7 @@
       "category": "Data",
       "feature": "Invocation and class templates",
       "junit": "Provider supplies invocation contexts",
-      "current": "Ordinary data cases/fixtures exist; context-bound resources and extensions need explicit design",
+      "current": "Typed NUnit sources and parameterized fixture examples provide invocation-specific sessions; exact JUnit provider semantics remain outside the wrapper",
       "status": "P",
       "requirements": [
         "JG-007"
@@ -352,7 +371,8 @@
         "J7",
         "N3",
         "N4",
-        "L1"
+        "L1",
+        "L9"
       ]
     },
     {
@@ -360,14 +380,15 @@
       "category": "Data",
       "feature": "Runtime-generated test trees",
       "junit": "TestFactory and nested dynamic containers",
-      "current": "Discovery-time TestCaseSource is not execution-time registration",
+      "current": "Adapter experiment confirms discovery cases replay while runtime loops remain one test; execution-time node registration is a documented no-go",
       "status": "B",
       "requirements": [
         "JG-013"
       ],
       "sources": [
         "J8",
-        "N3"
+        "N3",
+        "L12"
       ]
     },
     {
@@ -375,8 +396,8 @@
       "category": "Data",
       "feature": "Generated case identity and replay",
       "junit": "Names and dynamic test source metadata",
-      "current": "NUnit names/filters exist; stable Harbor case IDs and replay provenance absent",
-      "status": "P",
+      "current": "Source identity, row order and data produce stable case names/IDs; filtered adapter replay is verified",
+      "status": "H",
       "requirements": [
         "JG-007",
         "JG-013"
@@ -384,7 +405,9 @@
       "sources": [
         "J2",
         "J8",
-        "N3"
+        "N3",
+        "L9",
+        "L12"
       ]
     },
     {
@@ -392,14 +415,15 @@
       "category": "Structure",
       "feature": "Nested behavioral contexts",
       "junit": "Nested classes share enclosing lifecycle/state",
-      "current": "Nested C# fixtures do not reproduce Java enclosing-instance semantics",
+      "current": "HarborContext supplies explicit parent/child state and cleanup; NUnit tree and C# enclosing-instance behavior are unchanged",
       "status": "B",
       "requirements": [
         "JG-009"
       ],
       "sources": [
         "J9",
-        "L3"
+        "L3",
+        "L13"
       ]
     },
     {
@@ -407,14 +431,15 @@
       "category": "Structure",
       "feature": "Reusable contract tests",
       "junit": "Interface default methods may carry tests",
-      "current": "C# abstract fixture examples are feasible; no promised NUnit interface discovery parity",
-      "status": "P",
+      "current": "Runnable abstract contract fixtures share behavioral tests through ordinary NUnit inheritance",
+      "status": "H",
       "requirements": [
         "JG-009"
       ],
       "sources": [
         "J10",
-        "L3"
+        "L3",
+        "L13"
       ]
     },
     {
@@ -422,7 +447,7 @@
       "category": "Services",
       "feature": "Constructor/method/lifecycle injection",
       "junit": "ParameterResolver",
-      "current": "Harbor uses explicit Services resolution; ordinary NUnit parameters remain case data",
+      "current": "ServiceInvocation resolves exactly one typed service for an explicit delegate; transparent constructor/method parameter replacement is a documented no-go",
       "status": "B",
       "requirements": [
         "JG-008"
@@ -430,7 +455,8 @@
       "sources": [
         "J11",
         "L1",
-        "L3"
+        "L3",
+        "L14"
       ]
     },
     {
@@ -438,14 +464,15 @@
       "category": "Services",
       "feature": "Test instance creation and processing",
       "junit": "Factory and pre/post construction callbacks",
-      "current": "Harbor session starts after fixture construction; cannot transparently replace construction",
+      "current": "NUnit owns construction; explicit typed service invocation is the supported alternative",
       "status": "B",
       "requirements": [
         "JG-008"
       ],
       "sources": [
         "J12",
-        "L3"
+        "L3",
+        "L14"
       ]
     },
     {
@@ -453,14 +480,15 @@
       "category": "Services",
       "feature": "Hierarchical extension stores",
       "junit": "Method/class/root and launcher scopes",
-      "current": "Harbor DI root and scope are per-test; fixture/run stores not implemented",
-      "status": "P",
+      "current": "TestServiceScope explicitly owns fixture/run providers, isolated child scopes, optional scope-lifetime leases and quarantine propagation",
+      "status": "H",
       "requirements": [
         "JG-002"
       ],
       "sources": [
         "J13",
-        "L1"
+        "L1",
+        "L15"
       ]
     },
     {
@@ -499,7 +527,7 @@
       "category": "Extensions",
       "feature": "Precise body-only and class-level hooks",
       "junit": "BeforeTestExecution/AfterTestExecution and BeforeAll/AfterAll",
-      "current": "Harbor only brackets whole per-test lifecycle; not body-only timing",
+      "current": "RunAsync reports body boundaries; shared owner and NUnit outer hooks remain explicit rather than transparent interception",
       "status": "P",
       "requirements": [
         "JG-004",
@@ -507,7 +535,9 @@
       ],
       "sources": [
         "J14",
-        "L3"
+        "L3",
+        "L16",
+        "L15"
       ]
     },
     {
@@ -515,7 +545,7 @@
       "category": "Extensions",
       "feature": "Invocation and exception interception",
       "junit": "InvocationInterceptor and exception handlers",
-      "current": "Explicit RunAsync can wrap its body; transparent NUnit invocation interception is not exposed",
+      "current": "Explicit RunAsync observations retain errors; internal TestCommand replacement is excluded by a documented feasibility decision",
       "status": "B",
       "requirements": [
         "JG-004"
@@ -524,7 +554,8 @@
         "J25",
         "J15",
         "L1",
-        "L3"
+        "L3",
+        "L16"
       ]
     },
     {
@@ -532,7 +563,7 @@
       "category": "Extensions",
       "feature": "Outcome-aware observers",
       "junit": "TestWatcher outcome notifications",
-      "current": "No neutral final-outcome extension contract; NUnit teardown snapshot is not final runner outcome",
+      "current": "LifecycleObservation marks session finality only; final NUnit outcomes are verified externally from TRX",
       "status": "P",
       "requirements": [
         "JG-004"
@@ -540,7 +571,8 @@
       "sources": [
         "J16",
         "N9",
-        "L4"
+        "L4",
+        "L16"
       ]
     },
     {
@@ -548,14 +580,15 @@
       "category": "Extensions",
       "feature": "Declarative extension registration",
       "junit": "ExtendWith and RegisterExtension",
-      "current": "Harbor uses scoped DI registration; no per-method profiles or duplicate policy",
-      "status": "P",
+      "current": "Explicit profiles compose named registrations; UseExtensionProfile metadata supports inherited class/method activation with deterministic ordering and conflict rejection",
+      "status": "H",
       "requirements": [
         "JG-003"
       ],
       "sources": [
         "J17",
-        "L4"
+        "L4",
+        "L17"
       ]
     },
     {
@@ -563,14 +596,15 @@
       "category": "Extensions",
       "feature": "Composed annotations",
       "junit": "Meta-annotations combine policies",
-      "current": "C# attributes are not Java meta-annotations; explicit reusable profiles are feasible",
-      "status": "P",
+      "current": "Explicit C# profiles provide reusable registration policies without claiming Java meta-annotation semantics",
+      "status": "H",
       "requirements": [
         "JG-003"
       ],
       "sources": [
         "J17",
-        "L3"
+        "L3",
+        "L17"
       ]
     },
     {
@@ -593,14 +627,15 @@
       "category": "Resources",
       "feature": "Owned non-DI resources",
       "junit": "AutoClose fields and store ownership",
-      "current": "Caller-supplied DI instances are not owned; no explicit owned-resource stack",
-      "status": "P",
+      "current": "OwnedResources attempts all reverse cleanup and rejects duplicate explicit ownership; DI-owned instances remain governed by DI",
+      "status": "H",
       "requirements": [
         "JG-006"
       ],
       "sources": [
         "J18",
-        "L1"
+        "L1",
+        "L18"
       ]
     },
     {
@@ -608,15 +643,16 @@
       "category": "Resources",
       "feature": "Temporary directories",
       "junit": "TempDir factories and retention policies",
-      "current": "WorkDirectory is not an owned per-test temp directory; no Harbor temp service",
-      "status": "P",
+      "current": "Session-owned TemporaryDirectory supports deletion always, on observed success, or never; roots are canonicalized and linked cleanup trees are rejected",
+      "status": "H",
       "requirements": [
         "JG-006"
       ],
       "sources": [
         "J18",
         "N9",
-        "L1"
+        "L1",
+        "L18"
       ]
     },
     {
@@ -686,7 +722,7 @@
       "category": "Concurrency",
       "feature": "Timeouts and cancellation",
       "junit": "Timeout supports thread modes and defaults",
-      "current": "NUnit CancelAfter is cooperative; Harbor has no phase budgets or cleanup deadline policy",
+      "current": "Cooperative acquisition/start/body budgets and cleanup-overdue observations retain active leases; ordinary NUnit body cancellation remains CancelAfter",
       "status": "P",
       "requirements": [
         "JG-010"
@@ -694,7 +730,8 @@
       "sources": [
         "J20",
         "N8",
-        "L1"
+        "L1",
+        "L11"
       ]
     },
     {
@@ -702,14 +739,15 @@
       "category": "Concurrency",
       "feature": "Pre-interruption diagnostics",
       "junit": "PreInterruptCallback",
-      "current": "No JVM thread-interruption equivalent; plan cooperative stall diagnostics, not forced thread abort",
+      "current": "Cleanup-overdue diagnostics replace JVM interruption assumptions; no forced abort or lease revocation",
       "status": "B",
       "requirements": [
         "JG-010"
       ],
       "sources": [
         "J21",
-        "N8"
+        "N8",
+        "L11"
       ]
     },
     {
@@ -733,15 +771,16 @@
       "category": "Reporting",
       "feature": "Files and structured evidence",
       "junit": "Reporting entries and report formats",
-      "current": "NUnit AddTestAttachment exists; Harbor lacks retention/redaction/provenance conventions",
-      "status": "P",
+      "current": "Bounded ArtifactStore and LifecycleJournal persist provenance/redacted evidence; HarborArtifacts attaches retained files through public NUnit APIs",
+      "status": "H",
       "requirements": [
         "JG-011"
       ],
       "sources": [
         "J22",
         "N9",
-        "L3"
+        "L3",
+        "L19"
       ]
     },
     {
@@ -793,14 +832,15 @@
       "category": "Platform",
       "feature": "Engine/extension verification kit",
       "junit": "EngineTestKit discovery and event assertions",
-      "current": "Four external failure probes exist; reusable Harbor extension test kit absent",
-      "status": "P",
+      "current": "TestHarbor.Testing supplies an extension probe; external scripts verify real-runner lifecycle, condition and failure outcomes",
+      "status": "H",
       "requirements": [
         "JG-012"
       ],
       "sources": [
         "J23",
-        "L5"
+        "L5",
+        "L20"
       ]
     },
     {
@@ -838,14 +878,15 @@
       "category": "Platform",
       "feature": "API stability classification",
       "junit": "Explicit API evolution lifecycle",
-      "current": "Harbor is alpha; support policy and compatibility gates need definition",
-      "status": "P",
+      "current": "Experimental alpha policy, pinned baseline, internal-API source gate and clean package-consumer smoke test are in CI",
+      "status": "H",
       "requirements": [
         "JG-014"
       ],
       "sources": [
         "J24",
-        "L7"
+        "L7",
+        "L21"
       ]
     },
     {
@@ -882,14 +923,15 @@
       "category": "Harbor-specific",
       "feature": "Cross-process hardware ownership",
       "junit": "In-process ResourceLock is not a distributed broker",
-      "current": "Harbor also process-local; optional broker is a domain requirement, not Java parity",
+      "current": "Optional FileResourceBroker coordinates exclusive sets across one-host processes with fencing, heartbeats, crash quarantine and explicit recovery; multi-host operation is unsupported",
       "status": "X",
       "requirements": [
         "JG-015"
       ],
       "sources": [
         "J19",
-        "L2"
+        "L2",
+        "L22"
       ]
     },
     {
@@ -939,7 +981,11 @@
       "dependencies": [
         "JG-014"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/TestServiceScope.cs",
+        "examples/TestHarbor.Example/SharedScopeTests.cs"
+      ]
     },
     {
       "id": "JG-003",
@@ -957,7 +1003,12 @@
         "JG-001",
         "JG-014"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/ExtensionProfile.cs",
+        "src/TestHarbor.NUnit/UseExtensionProfileAttribute.cs",
+        "examples/TestHarbor.Example/ContextContractTests.cs"
+      ]
     },
     {
       "id": "JG-004",
@@ -975,7 +1026,12 @@
       "dependencies": [
         "JG-012"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/LifecycleObservation.cs",
+        "src/TestHarbor/TestSession.cs",
+        "docs/WRAPPER-BOUNDARIES.md"
+      ]
     },
     {
       "id": "JG-005",
@@ -992,7 +1048,11 @@
       "dependencies": [
         "JG-014"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/TestConfiguration.cs",
+        "tests/TestHarbor.Tests/ConformanceProbes.cs"
+      ]
     },
     {
       "id": "JG-006",
@@ -1011,7 +1071,12 @@
         "JG-004",
         "JG-011"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/OwnedResources.cs",
+        "src/TestHarbor/TemporaryDirectory.cs",
+        "tests/TestHarbor.Tests/InfrastructureTests.cs"
+      ]
     },
     {
       "id": "JG-007",
@@ -1030,7 +1095,12 @@
         "JG-001",
         "JG-002"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor.NUnit/HarborCases.cs",
+        "examples/TestHarbor.Example/ContextContractTests.cs",
+        "tools/verify_discovery.py"
+      ]
     },
     {
       "id": "JG-008",
@@ -1048,7 +1118,11 @@
         "JG-014",
         "JG-016"
       ],
-      "status": "planned"
+      "status": "resolved: explicit alternative",
+      "evidence": [
+        "src/TestHarbor/ServiceInvocation.cs",
+        "docs/WRAPPER-BOUNDARIES.md"
+      ]
     },
     {
       "id": "JG-009",
@@ -1066,7 +1140,11 @@
         "JG-002",
         "JG-004"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/HarborContext.cs",
+        "examples/TestHarbor.Example/ContextContractTests.cs"
+      ]
     },
     {
       "id": "JG-010",
@@ -1084,7 +1162,12 @@
       "dependencies": [
         "JG-012"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/SessionBudgets.cs",
+        "src/TestHarbor.NUnit/HarborFixture.cs",
+        "tests/TestHarbor.Tests/AdvancedInfrastructureTests.cs"
+      ]
     },
     {
       "id": "JG-011",
@@ -1101,7 +1184,12 @@
       "dependencies": [
         "JG-004"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/ArtifactStore.cs",
+        "src/TestHarbor/LifecycleJournal.cs",
+        "src/TestHarbor.NUnit/HarborArtifacts.cs"
+      ]
     },
     {
       "id": "JG-012",
@@ -1116,7 +1204,12 @@
         "Provide a documented helper for third-party extension authors; do not depend on NUnit internal execution classes."
       ],
       "dependencies": [],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor.Testing/ExtensionProbe.cs",
+        "docs/EXTENSION-CONFORMANCE.md",
+        "tools/verify_conformance.py"
+      ]
     },
     {
       "id": "JG-013",
@@ -1133,7 +1226,12 @@
       "dependencies": [
         "JG-012"
       ],
-      "status": "planned"
+      "status": "resolved: wrapper boundary",
+      "evidence": [
+        "tests/TestHarbor.Tests/DiscoveryBoundaryTests.cs",
+        "tools/verify_discovery.py",
+        "docs/WRAPPER-BOUNDARIES.md"
+      ]
     },
     {
       "id": "JG-014",
@@ -1150,7 +1248,12 @@
       "dependencies": [
         "JG-012"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "docs/COMPATIBILITY.md",
+        "tools/verify_compatibility.py",
+        "tests/TestHarbor.Tests/RepeatRetryTests.cs"
+      ]
     },
     {
       "id": "JG-015",
@@ -1168,7 +1271,12 @@
         "JG-010",
         "JG-014"
       ],
-      "status": "planned"
+      "status": "implemented",
+      "evidence": [
+        "src/TestHarbor/FileResourceBroker.cs",
+        "tools/verify_broker.py",
+        "docs/WRAPPER-BOUNDARIES.md"
+      ]
     },
     {
       "id": "JG-016",

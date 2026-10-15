@@ -25,17 +25,73 @@ public sealed class TestSession : IAsyncDisposable
     /// <summary>Prevents new service resolution through the session once disposal has started.</summary>
     private int disposed;
 
+    /// <summary>Releases a shared-provider child rental instead of disposing its root.</summary>
+    private readonly Action<bool>? releaseScope;
+    /// <summary>Tracks session-created directories for cleanup after service disposal.</summary>
+    private readonly List<TemporaryDirectory> directories = [];
+    /// <summary>Collects failures reported through the session and observer callbacks.</summary>
+    private readonly List<Exception> observedErrors = [];
+    /// <summary>Collects observer failures that must fail the session at cleanup.</summary>
+    private readonly List<Exception> observerErrors = [];
+    /// <summary>Detects recursive session disposal from extension or service cleanup.</summary>
+    private readonly AsyncLocal<bool> cleaning = new();
+
+    /// <summary>Gets the owner for resources created outside dependency injection.</summary>
+    /// <value>The session-owned reverse cleanup stack.</value>
+    public OwnedResources Owned { get; } = new();
+
+    /// <summary>Creates a unique temporary directory retained according to observed session outcome.</summary>
+    /// <param name="root">Optional parent directory; defaults to the operating system temporary path.</param>
+    /// <param name="retention">Retention policy, defaulting to failed-session evidence retention.</param>
+    /// <returns>The session-owned temporary directory.</returns>
+    public TemporaryDirectory CreateTemporaryDirectory(string? root = null, DirectoryRetention retention = DirectoryRetention.OnFailure)
+    {
+        lock (disposeGate)
+        {
+            ObjectDisposedException.ThrowIf(disposal is not null, this);
+            var directory = new TemporaryDirectory(root ?? Path.GetTempPath(), retention);
+            directories.Add(directory);
+            return directory;
+        }
+    }
+
+    /// <summary>Records a failure from caller-managed setup, body or teardown for outcome-aware cleanup.</summary>
+    /// <param name="error">Failure that must remain visible to session observers.</param>
+    /// <remarks>This records evidence only; callers must still propagate their failure to their test runner.</remarks>
+    public void RecordFailure(Exception error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        lock (observedErrors) observedErrors.Add(error);
+    }
+
+    /// <summary>Publishes a detached phase observation while retaining observer failures.</summary>
+    /// <param name="phase">Boundary being observed.</param>
+    private void Observe(SessionPhase phase)
+    {
+        lock (observedErrors)
+        {
+            if (context.Observation?.IsFinal == true && phase == SessionPhase.CleanupOverdue) return;
+            var observation = new LifecycleObservation(phase, options.Owner!, DateTimeOffset.UtcNow,
+                Array.AsReadOnly(observedErrors.ToArray()), phase == SessionPhase.Finished);
+            context.Observation = observation;
+            try { options.Observer?.Invoke(observation); }
+            catch (Exception error) { observerErrors.Add(error); observedErrors.Add(error); }
+        }
+    }
+
     /// <summary>Binds an owned service provider, async scope and resource lease into a test session.</summary>
     /// <param name="root">Root provider owning session-local singleton services.</param>
     /// <param name="scope">Async DI scope owning per-test services.</param>
     /// <param name="lease">Granted resource set retained through all cleanup.</param>
     /// <param name="options">Diagnostic identity and cleanup policy.</param>
-    private TestSession(ServiceProvider root, AsyncServiceScope scope, ResourceLease lease, TestSessionOptions options)
+    /// <param name="releaseScope">Optional callback releasing a reusable provider rental.</param>
+    private TestSession(ServiceProvider root, AsyncServiceScope scope, ResourceLease lease, TestSessionOptions options, Action<bool>? releaseScope = null)
     {
         this.root = root;
         this.scope = scope;
         this.lease = lease;
         this.options = options;
+        this.releaseScope = releaseScope;
         context = new(scope.ServiceProvider, options.Owner!);
     }
 
@@ -55,30 +111,49 @@ public sealed class TestSession : IAsyncDisposable
         Action<IServiceCollection>? configure = null, ResourceCoordinator? coordinator = null,
         CancellationToken cancellationToken = default, TestSessionOptions? options = null)
     {
+        if (options?.ServiceScope is not null && configure is not null)
+            throw new ArgumentException("Register services on the shared owner; session registration callbacks cannot override its provider.", nameof(configure));
         options = (options ?? new()) with { Owner = options?.Owner ?? Guid.NewGuid().ToString("N") };
+        options.Budgets?.Validate();
+        resources = resources.ToArray();
+        options.ServiceScope?.ValidateResources(resources);
+        using var acquisition = SessionBudgets.Start(options.Budgets?.Acquisition, cancellationToken);
         var lease = await (coordinator ?? ResourceCoordinator.Shared)
-            .AcquireAsync(resources, cancellationToken, options.Owner).ConfigureAwait(false);
+            .AcquireAsync(resources, acquisition.Token, options.Owner).ConfigureAwait(false);
+        using var startup = SessionBudgets.Start(options.Budgets?.Startup, cancellationToken);
         ServiceProvider? provider = null;
         TestSession? session = null;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var services = new ServiceCollection();
-            configure?.Invoke(services);
-            provider = services.BuildServiceProvider(new ServiceProviderOptions
-                { ValidateScopes = true, ValidateOnBuild = true });
-            session = new TestSession(provider, provider.CreateAsyncScope(), lease, options);
+            if (options.ServiceScope is { } shared)
+            {
+                var rental = shared.Rent();
+                session = new TestSession(rental.Provider, rental.Scope, lease, options, rental.Release);
+            }
+            else
+            {
+                var services = new ServiceCollection();
+                configure?.Invoke(services);
+                provider = services.BuildServiceProvider(new ServiceProviderOptions
+                    { ValidateScopes = true, ValidateOnBuild = true });
+                session = new TestSession(provider, provider.CreateAsyncScope(), lease, options);
+            }
+            session.Observe(SessionPhase.Starting);
             foreach (var extension in session.Services.GetServices<ITestExtension>())
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                startup.Token.ThrowIfCancellationRequested();
                 // Register for rollback before calling Start: initialization can fail partway through.
                 session.entered.Add(extension);
-                await extension.StartAsync(session.context, cancellationToken).ConfigureAwait(false);
+                await extension.StartAsync(session.context, startup.Token).ConfigureAwait(false);
             }
+            startup.Token.ThrowIfCancellationRequested();
+            session.Observe(SessionPhase.Ready);
             return session;
         }
         catch (Exception setupError)
         {
+            session?.RecordFailure(setupError);
             try
             {
                 if (session is not null) await session.DisposeAsync().ConfigureAwait(false);
@@ -116,10 +191,13 @@ public sealed class TestSession : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(body);
         var session = await OpenAsync(resources, configure, coordinator, cancellationToken, options).ConfigureAwait(false);
         Exception? bodyError = null;
-        try { await body(session, cancellationToken).ConfigureAwait(false); }
-        catch (Exception error) { bodyError = error; throw; }
+        using var budget = SessionBudgets.Start(options?.Budgets?.Body, cancellationToken);
+        session.Observe(SessionPhase.BodyStarting);
+        try { await body(session, budget.Token).ConfigureAwait(false); budget.Token.ThrowIfCancellationRequested(); }
+        catch (Exception error) { bodyError = error; session.RecordFailure(error); throw; }
         finally
         {
+            session.Observe(SessionPhase.BodyFinished);
             try { await session.DisposeAsync().ConfigureAwait(false); }
             catch (Exception cleanupError) when (bodyError is not null)
             { throw new AggregateException("Test body and cleanup both failed.", bodyError, cleanupError); }
@@ -136,6 +214,7 @@ public sealed class TestSession : IAsyncDisposable
     /// <exception cref="AggregateException">One or more extension or service cleanup operations failed.</exception>
     public ValueTask DisposeAsync()
     {
+        if (cleaning.Value) throw new InvalidOperationException("Recursive session disposal is unsupported.");
         lock (disposeGate)
         {
             if (disposal is null)
@@ -155,8 +234,23 @@ public sealed class TestSession : IAsyncDisposable
     /// <returns>A task completing after the shared disposal promise has been resolved.</returns>
     private async Task CompleteDisposalAsync(TaskCompletionSource completion)
     {
-        try { await CleanupAsync().ConfigureAwait(false); completion.SetResult(); }
+        cleaning.Value = true;
+        try
+        {
+            var cleanup = CleanupAsync();
+            if (options.Budgets?.CleanupWarningAfter is { } threshold)
+            {
+                using var timer = new CancellationTokenSource();
+                var delay = Task.Delay(threshold, timer.Token);
+                if (await Task.WhenAny(cleanup, delay).ConfigureAwait(false) == delay)
+                    Observe(SessionPhase.CleanupOverdue);
+                timer.Cancel();
+            }
+            await cleanup.ConfigureAwait(false);
+            completion.SetResult();
+        }
         catch (Exception error) { completion.SetException(error); }
+        finally { cleaning.Value = false; }
     }
 
     /// <summary>Unwinds extensions, disposes services, quarantines failed cleanup and finally releases resources.</summary>
@@ -164,6 +258,7 @@ public sealed class TestSession : IAsyncDisposable
     private async Task CleanupAsync()
     {
         List<Exception> errors = [];
+        Observe(SessionPhase.Cleaning);
         try
         {
             for (var index = entered.Count - 1; index >= 0; index--)
@@ -171,13 +266,34 @@ public sealed class TestSession : IAsyncDisposable
                 try { await entered[index].StopAsync(context).ConfigureAwait(false); }
                 catch (Exception error) { errors.Add(error); }
             }
+            try { await Owned.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error) { errors.Add(error); }
             try { await scope.DisposeAsync().ConfigureAwait(false); }
             catch (Exception error) { errors.Add(error); }
-            try { await root.DisposeAsync().ConfigureAwait(false); }
+            try
+            {
+                if (releaseScope is null) await root.DisposeAsync().ConfigureAwait(false);
+
+            }
             catch (Exception error) { errors.Add(error); }
         }
         finally
         {
+            foreach (var directory in directories.AsEnumerable().Reverse())
+            {
+                try
+                {
+                    bool failed;
+                    lock (observedErrors) failed = observedErrors.Count != 0;
+                    directory.Complete(failed || errors.Count != 0 || observerErrors.Count != 0);
+                }
+                catch (Exception error) { errors.Add(error); }
+            }
+            if (releaseScope is not null)
+            {
+                try { releaseScope(errors.Count > 0); }
+                catch (Exception error) { errors.Add(error); }
+            }
             try
             {
                 if (errors.Count > 0 && options.QuarantineOnCleanupFailure)
@@ -185,6 +301,9 @@ public sealed class TestSession : IAsyncDisposable
             }
             finally { lease.Dispose(); }
         }
+        foreach (var error in errors) RecordFailure(error);
+        Observe(SessionPhase.Finished);
+        errors.AddRange(observerErrors);
         if (errors.Count > 0) throw new AggregateException("Session cleanup failed.", errors);
     }
 }

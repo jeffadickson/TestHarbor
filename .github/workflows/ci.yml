@@ -24,15 +24,21 @@ jobs:
       - run: dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build --no-restore -- .
       - run: dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build --no-restore -- --self-test
       - run: python tools/verify_failure_probes.py
+      - run: python tools/verify_conformance.py
+      - run: python tools/verify_discovery.py
+      - run: python tools/verify_broker.py
+      - run: python tools/verify_attachments.py
       - run: python tools/build_docs.py
       - run: dotnet pack src/TestHarbor -c Release --no-restore
       - run: dotnet pack src/TestHarbor.NUnit -c Release --no-restore
+      - run: dotnet pack src/TestHarbor.Testing -c Release --no-restore
+      - run: python tools/verify_compatibility.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: testharbor-${{ matrix.os }}
           path: |
-            **/TestResults/*.trx
+            **/TestResults/**
             src/**/bin/Release/*.nupkg
             docs/api.html
           if-no-files-found: warn

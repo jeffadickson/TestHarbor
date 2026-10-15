@@ -28,3 +28,15 @@ XML/HTML API documentation, locked dependencies, and a three-OS CI workflow defi
 - Combined inherited declarations and dynamic requirements with exclusive-wins duplicate handling.
 - Verified overloaded, generic and parameterized cases, inherited overrides and full-lifecycle ownership.
 - Updated the runnable simulated supply example, XML reference and JG-001/TH-007 tracking.
+
+## 0.3.0-alpha.1
+
+- Added phase observations, session-finality semantics, explicit resource ownership and safe recursive-disposal guards.
+- Added fixture/run providers with per-session scopes, scope resource leases and cleanup quarantine propagation.
+- Added profiles, pre-acquisition conditions, typed configuration, cooperative phase budgets and cleanup-overdue diagnostics.
+- Added temporary directories, bounded artifacts, retained lifecycle journals and NUnit attachments.
+- Added typed data sources, explicit service invocation, nested contexts and contract/parameterized fixture examples.
+- Added TestHarbor.Testing and real-runner conformance, discovery, report, package-consumer and cross-process broker checks.
+- Added the optional single-host FileResourceBroker with monotonic fencing, diagnostic heartbeat and persistent quarantine/recovery.
+- Documented no-go decisions for transparent invocation replacement and runtime-generated adapter nodes.
+- Enforced XML documentation across all source, tests, examples, tooling and generated consumer code.

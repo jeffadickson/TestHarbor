@@ -1,26 +1,26 @@
 # TestHarbor next-release requirements and tasks
 
-These requirements follow the [56-capability analysis](JUNIT-GAP-ANALYSIS.md). “v0.3” names the planning document, not a claim that all work is implemented. Existing v0.1/v0.2 requirements remain applicable. P0 is the current documentation gate; P1 is foundational delivery; P2 is ergonomics; P3 is later feasibility or distributed infrastructure.
+These requirements follow the [56-capability analysis](JUNIT-GAP-ANALYSIS.md). Version 0.3 delivers the feasible wrapper behavior; feasibility requirements close with explicit alternatives and documented boundaries. Existing v0.1/v0.2 requirements remain applicable. P0 is the current documentation gate; P1 is foundational delivery; P2 is ergonomics; P3 is later feasibility or distributed infrastructure.
 
 ## Task index
 
 | Requirement | Priority | Task | Status |
 |---|---|---|---|
 | [JG-001 Declarative resource requirements](#jg-001) | P1 | [#1](https://github.com/jeffadickson/TestHarbor/issues/1) | implemented |
-| [JG-002 Fixture and run service scopes](#jg-002) | P1 | [#2](https://github.com/jeffadickson/TestHarbor/issues/2) | planned |
-| [JG-003 Reusable extension profiles and registration](#jg-003) | P2 | [#5](https://github.com/jeffadickson/TestHarbor/issues/5) | planned |
-| [JG-004 Lifecycle phase and outcome contracts](#jg-004) | P1 | [#6](https://github.com/jeffadickson/TestHarbor/issues/6) | planned |
-| [JG-005 Conditional execution and reproducible configuration](#jg-005) | P1 | [#7](https://github.com/jeffadickson/TestHarbor/issues/7) | planned |
-| [JG-006 Temporary directories and owned-resource cleanup](#jg-006) | P1 | [#8](https://github.com/jeffadickson/TestHarbor/issues/8) | planned |
-| [JG-007 Typed data sources and invocation templates](#jg-007) | P2 | [#9](https://github.com/jeffadickson/TestHarbor/issues/9) | planned |
-| [JG-008 Typed service injection feasibility](#jg-008) | P2 | [#10](https://github.com/jeffadickson/TestHarbor/issues/10) | planned |
-| [JG-009 Nested contexts and reusable contract suites](#jg-009) | P2 | [#11](https://github.com/jeffadickson/TestHarbor/issues/11) | planned |
-| [JG-010 Cancellation budgets and lifecycle misuse guards](#jg-010) | P1 | [#12](https://github.com/jeffadickson/TestHarbor/issues/12) | planned |
-| [JG-011 Artifacts and structured result evidence](#jg-011) | P1 | [#13](https://github.com/jeffadickson/TestHarbor/issues/13) | planned |
-| [JG-012 Extension conformance test kit](#jg-012) | P1 | [#14](https://github.com/jeffadickson/TestHarbor/issues/14) | planned |
-| [JG-013 Runtime-generated test discovery/reporting feasibility](#jg-013) | P3 | [#4](https://github.com/jeffadickson/TestHarbor/issues/4) | planned |
-| [JG-014 Compatibility and API stability policy](#jg-014) | P1 | [#15](https://github.com/jeffadickson/TestHarbor/issues/15) | planned |
-| [JG-015 Cross-process resource broker](#jg-015) | P3 | [#3](https://github.com/jeffadickson/TestHarbor/issues/3) | planned |
+| [JG-002 Fixture and run service scopes](#jg-002) | P1 | [#2](https://github.com/jeffadickson/TestHarbor/issues/2) | implemented |
+| [JG-003 Reusable extension profiles and registration](#jg-003) | P2 | [#5](https://github.com/jeffadickson/TestHarbor/issues/5) | implemented |
+| [JG-004 Lifecycle phase and outcome contracts](#jg-004) | P1 | [#6](https://github.com/jeffadickson/TestHarbor/issues/6) | implemented |
+| [JG-005 Conditional execution and reproducible configuration](#jg-005) | P1 | [#7](https://github.com/jeffadickson/TestHarbor/issues/7) | implemented |
+| [JG-006 Temporary directories and owned-resource cleanup](#jg-006) | P1 | [#8](https://github.com/jeffadickson/TestHarbor/issues/8) | implemented |
+| [JG-007 Typed data sources and invocation templates](#jg-007) | P2 | [#9](https://github.com/jeffadickson/TestHarbor/issues/9) | implemented |
+| [JG-008 Typed service injection feasibility](#jg-008) | P2 | [#10](https://github.com/jeffadickson/TestHarbor/issues/10) | resolved: explicit alternative |
+| [JG-009 Nested contexts and reusable contract suites](#jg-009) | P2 | [#11](https://github.com/jeffadickson/TestHarbor/issues/11) | implemented |
+| [JG-010 Cancellation budgets and lifecycle misuse guards](#jg-010) | P1 | [#12](https://github.com/jeffadickson/TestHarbor/issues/12) | implemented |
+| [JG-011 Artifacts and structured result evidence](#jg-011) | P1 | [#13](https://github.com/jeffadickson/TestHarbor/issues/13) | implemented |
+| [JG-012 Extension conformance test kit](#jg-012) | P1 | [#14](https://github.com/jeffadickson/TestHarbor/issues/14) | implemented |
+| [JG-013 Runtime-generated test discovery/reporting feasibility](#jg-013) | P3 | [#4](https://github.com/jeffadickson/TestHarbor/issues/4) | resolved: wrapper boundary |
+| [JG-014 Compatibility and API stability policy](#jg-014) | P1 | [#15](https://github.com/jeffadickson/TestHarbor/issues/15) | implemented |
+| [JG-015 Cross-process resource broker](#jg-015) | P3 | [#3](https://github.com/jeffadickson/TestHarbor/issues/3) | implemented |
 | [JG-016 XML documentation everywhere](#jg-016) | P0 | [#16](https://github.com/jeffadickson/TestHarbor/issues/16) | implemented |
 
 <a id="jg-001"></a>
@@ -39,12 +39,12 @@ Acceptance criteria:
 
 Dependencies: none.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
 
 <a id="jg-002"></a>
 ## JG-002 — Fixture and run service scopes
 
-P1 · [#2](https://github.com/jeffadickson/TestHarbor/issues/2) · planned
+P1 · [#2](https://github.com/jeffadickson/TestHarbor/issues/2) · implemented
 
 Add explicitly owned reusable scopes while preserving per-test isolation.
 
@@ -57,12 +57,14 @@ Acceptance criteria:
 
 Dependencies: JG-014.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/TestServiceScope.cs](../src/TestHarbor/TestServiceScope.cs), [examples/TestHarbor.Example/SharedScopeTests.cs](../examples/TestHarbor.Example/SharedScopeTests.cs).
 
 <a id="jg-003"></a>
 ## JG-003 — Reusable extension profiles and registration
 
-P2 · [#5](https://github.com/jeffadickson/TestHarbor/issues/5) · planned
+P2 · [#5](https://github.com/jeffadickson/TestHarbor/issues/5) · implemented
 
 Provide explicit C# profiles for extension composition.
 
@@ -75,12 +77,14 @@ Acceptance criteria:
 
 Dependencies: JG-001, JG-014.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/ExtensionProfile.cs](../src/TestHarbor/ExtensionProfile.cs), [src/TestHarbor.NUnit/UseExtensionProfileAttribute.cs](../src/TestHarbor.NUnit/UseExtensionProfileAttribute.cs), [examples/TestHarbor.Example/ContextContractTests.cs](../examples/TestHarbor.Example/ContextContractTests.cs).
 
 <a id="jg-004"></a>
 ## JG-004 — Lifecycle phase and outcome contracts
 
-P1 · [#6](https://github.com/jeffadickson/TestHarbor/issues/6) · planned
+P1 · [#6](https://github.com/jeffadickson/TestHarbor/issues/6) · implemented
 
 Extend whole-test hooks without pretending to intercept every NUnit invocation.
 
@@ -94,12 +98,14 @@ Acceptance criteria:
 
 Dependencies: JG-012.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/LifecycleObservation.cs](../src/TestHarbor/LifecycleObservation.cs), [src/TestHarbor/TestSession.cs](../src/TestHarbor/TestSession.cs), [docs/WRAPPER-BOUNDARIES.md](../docs/WRAPPER-BOUNDARIES.md).
 
 <a id="jg-005"></a>
 ## JG-005 — Conditional execution and reproducible configuration
 
-P1 · [#7](https://github.com/jeffadickson/TestHarbor/issues/7) · planned
+P1 · [#7](https://github.com/jeffadickson/TestHarbor/issues/7) · implemented
 
 Evaluate environment and capability requirements before acquiring hardware.
 
@@ -112,12 +118,14 @@ Acceptance criteria:
 
 Dependencies: JG-014.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/TestConfiguration.cs](../src/TestHarbor/TestConfiguration.cs), [tests/TestHarbor.Tests/ConformanceProbes.cs](../tests/TestHarbor.Tests/ConformanceProbes.cs).
 
 <a id="jg-006"></a>
 ## JG-006 — Temporary directories and owned-resource cleanup
 
-P1 · [#8](https://github.com/jeffadickson/TestHarbor/issues/8) · planned
+P1 · [#8](https://github.com/jeffadickson/TestHarbor/issues/8) · implemented
 
 Add an explicit ownership stack alongside DI.
 
@@ -131,12 +139,14 @@ Acceptance criteria:
 
 Dependencies: JG-004, JG-011.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/OwnedResources.cs](../src/TestHarbor/OwnedResources.cs), [src/TestHarbor/TemporaryDirectory.cs](../src/TestHarbor/TemporaryDirectory.cs), [tests/TestHarbor.Tests/InfrastructureTests.cs](../tests/TestHarbor.Tests/InfrastructureTests.cs).
 
 <a id="jg-007"></a>
 ## JG-007 — Typed data sources and invocation templates
 
-P2 · [#9](https://github.com/jeffadickson/TestHarbor/issues/9) · planned
+P2 · [#9](https://github.com/jeffadickson/TestHarbor/issues/9) · implemented
 
 Build on NUnit discovery instead of replacing it.
 
@@ -150,12 +160,14 @@ Acceptance criteria:
 
 Dependencies: JG-001, JG-002.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor.NUnit/HarborCases.cs](../src/TestHarbor.NUnit/HarborCases.cs), [examples/TestHarbor.Example/ContextContractTests.cs](../examples/TestHarbor.Example/ContextContractTests.cs), [tools/verify_discovery.py](../tools/verify_discovery.py).
 
 <a id="jg-008"></a>
 ## JG-008 — Typed service injection feasibility
 
-P2 · [#10](https://github.com/jeffadickson/TestHarbor/issues/10) · planned
+P2 · [#10](https://github.com/jeffadickson/TestHarbor/issues/10) · resolved: explicit alternative
 
 Assess ergonomic injection without replacing NUnit fixture construction.
 
@@ -168,12 +180,14 @@ Acceptance criteria:
 
 Dependencies: JG-014, JG-016.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/ServiceInvocation.cs](../src/TestHarbor/ServiceInvocation.cs), [docs/WRAPPER-BOUNDARIES.md](../docs/WRAPPER-BOUNDARIES.md).
 
 <a id="jg-009"></a>
 ## JG-009 — Nested contexts and reusable contract suites
 
-P2 · [#11](https://github.com/jeffadickson/TestHarbor/issues/11) · planned
+P2 · [#11](https://github.com/jeffadickson/TestHarbor/issues/11) · implemented
 
 Provide C#-appropriate behavioral composition.
 
@@ -186,12 +200,14 @@ Acceptance criteria:
 
 Dependencies: JG-002, JG-004.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/HarborContext.cs](../src/TestHarbor/HarborContext.cs), [examples/TestHarbor.Example/ContextContractTests.cs](../examples/TestHarbor.Example/ContextContractTests.cs).
 
 <a id="jg-010"></a>
 ## JG-010 — Cancellation budgets and lifecycle misuse guards
 
-P1 · [#12](https://github.com/jeffadickson/TestHarbor/issues/12) · planned
+P1 · [#12](https://github.com/jeffadickson/TestHarbor/issues/12) · implemented
 
 Harden the wrapper boundary and make stalled phases diagnosable.
 
@@ -205,12 +221,14 @@ Acceptance criteria:
 
 Dependencies: JG-012.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/SessionBudgets.cs](../src/TestHarbor/SessionBudgets.cs), [src/TestHarbor.NUnit/HarborFixture.cs](../src/TestHarbor.NUnit/HarborFixture.cs), [tests/TestHarbor.Tests/AdvancedInfrastructureTests.cs](../tests/TestHarbor.Tests/AdvancedInfrastructureTests.cs).
 
 <a id="jg-011"></a>
 ## JG-011 — Artifacts and structured result evidence
 
-P1 · [#13](https://github.com/jeffadickson/TestHarbor/issues/13) · planned
+P1 · [#13](https://github.com/jeffadickson/TestHarbor/issues/13) · implemented
 
 Use NUnit attachments with defined retention and redaction.
 
@@ -223,12 +241,14 @@ Acceptance criteria:
 
 Dependencies: JG-004.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/ArtifactStore.cs](../src/TestHarbor/ArtifactStore.cs), [src/TestHarbor/LifecycleJournal.cs](../src/TestHarbor/LifecycleJournal.cs), [src/TestHarbor.NUnit/HarborArtifacts.cs](../src/TestHarbor.NUnit/HarborArtifacts.cs).
 
 <a id="jg-012"></a>
 ## JG-012 — Extension conformance test kit
 
-P1 · [#14](https://github.com/jeffadickson/TestHarbor/issues/14) · planned
+P1 · [#14](https://github.com/jeffadickson/TestHarbor/issues/14) · implemented
 
 Turn existing failure probes into a reusable contract harness.
 
@@ -241,12 +261,14 @@ Acceptance criteria:
 
 Dependencies: none.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor.Testing/ExtensionProbe.cs](../src/TestHarbor.Testing/ExtensionProbe.cs), [docs/EXTENSION-CONFORMANCE.md](../docs/EXTENSION-CONFORMANCE.md), [tools/verify_conformance.py](../tools/verify_conformance.py).
 
 <a id="jg-013"></a>
 ## JG-013 — Runtime-generated test discovery/reporting feasibility
 
-P3 · [#4](https://github.com/jeffadickson/TestHarbor/issues/4) · planned
+P3 · [#4](https://github.com/jeffadickson/TestHarbor/issues/4) · resolved: wrapper boundary
 
 Determine whether runtime-discovered tests fit the wrapper constraint.
 
@@ -259,12 +281,14 @@ Acceptance criteria:
 
 Dependencies: JG-012.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [tests/TestHarbor.Tests/DiscoveryBoundaryTests.cs](../tests/TestHarbor.Tests/DiscoveryBoundaryTests.cs), [tools/verify_discovery.py](../tools/verify_discovery.py), [docs/WRAPPER-BOUNDARIES.md](../docs/WRAPPER-BOUNDARIES.md).
 
 <a id="jg-014"></a>
 ## JG-014 — Compatibility and API stability policy
 
-P1 · [#15](https://github.com/jeffadickson/TestHarbor/issues/15) · planned
+P1 · [#15](https://github.com/jeffadickson/TestHarbor/issues/15) · implemented
 
 Make documented support claims executable.
 
@@ -277,12 +301,14 @@ Acceptance criteria:
 
 Dependencies: JG-012.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [docs/COMPATIBILITY.md](../docs/COMPATIBILITY.md), [tools/verify_compatibility.py](../tools/verify_compatibility.py), [tests/TestHarbor.Tests/RepeatRetryTests.cs](../tests/TestHarbor.Tests/RepeatRetryTests.cs).
 
 <a id="jg-015"></a>
 ## JG-015 — Cross-process resource broker
 
-P3 · [#3](https://github.com/jeffadickson/TestHarbor/issues/3) · planned
+P3 · [#3](https://github.com/jeffadickson/TestHarbor/issues/3) · implemented
 
 Treat distributed ownership as a separate instrument-domain enhancement.
 
@@ -295,7 +321,9 @@ Acceptance criteria:
 
 Dependencies: JG-010, JG-014.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
+
+Implementation evidence: [src/TestHarbor/FileResourceBroker.cs](../src/TestHarbor/FileResourceBroker.cs), [tools/verify_broker.py](../tools/verify_broker.py), [docs/WRAPPER-BOUNDARIES.md](../docs/WRAPPER-BOUNDARIES.md).
 
 <a id="jg-016"></a>
 ## JG-016 — XML documentation everywhere
@@ -314,7 +342,7 @@ Acceptance criteria:
 
 Dependencies: none.
 
-Verification task: add focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved. Include XML documentation and runnable examples for every new API; CI must pass on Linux, Windows and macOS.
+Verification contract: focused unit tests plus real-runner probes where discovery, outcomes or lifecycle behavior is involved; XML documentation and three-platform CI remain required.
 
 ## Definition of done
 

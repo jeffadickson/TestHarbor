@@ -1,6 +1,6 @@
 # TestHarbor
 
-Version **0.2.1-alpha.1** · working project name · .NET 10 · NUnit 5
+Version **0.3.0-alpha.1** · working project name · .NET 10 · NUnit 5
 
 TestHarbor is a companion wrapper around NUnit. NUnit remains responsible for discovery,
 assertions, execution, filtering, and reports. No NUnit fork, internal API references,
@@ -17,10 +17,14 @@ dotnet test TestHarbor.sln -c Release --no-build
 dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- .
 dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- --self-test
 python3 tools/verify_failure_probes.py
+python3 tools/verify_conformance.py
+python3 tools/verify_discovery.py
+python3 tools/verify_broker.py
+python3 tools/verify_attachments.py
 python3 tools/build_docs.py
 ```
 
-The deliberate failure fixture is marked Explicit and is skipped in a normal run.
+The deliberate failure and conformance fixtures are marked Explicit and excluded from a normal run.
 The verifier selects it explicitly and requires four expected failures plus independent
 cleanup and lock-release evidence. Its successful exit indicates the failure handling passed.
 
@@ -57,7 +61,7 @@ public sealed class SupplyTests : HarborFixture
 
 See `examples/TestHarbor.Example/PowerSupplyTests.cs` for the complete runnable simulation.
 The base fixture acquires resources before derived SetUp and cleans up after derived TearDown.
-Services are per-test; even a singleton registration lives only for that session.
+Services are per-test by default; even a singleton registration lives only for that session unless you explicitly select a shared TestServiceScope.
 NUnit test parameters remain ordinary TestCase/TestCaseSource data. Service injection is explicit
 through `Services`, not automatic injection into method parameters.
 
@@ -84,7 +88,7 @@ A session opened inside the test body does not cover NUnit setup/teardown outsid
 
 This is an alpha, not a hardware safety interlock. Coordination is in-process and shared only
 among callers using the same ResourceCoordinator instance (including the default Shared instance).
-Separate test host processes or separately loaded copies do not coordinate. Resource names are
+Separate test host processes or separately loaded copies do not coordinate through this default coordinator. Use the optional FileResourceBroker explicitly for cooperating processes on one host. Resource names are
 case-sensitive and must identify actual shared hardware consistently.
 
 Acquire every needed resource together. Nested acquisition is non-reentrant and may deadlock.
@@ -95,8 +99,7 @@ Readers must truly be safe to overlap: an instrument query that changes device s
 Keep HarborFixture's InstancePerTestCase lifecycle. Do not override it with SingleInstance or hide
 its lifecycle methods. Constructors and OneTimeSetUp are outside the lease. Registration callbacks
 must only register services, not acquire hardware. Do not leave fire-and-forget work running after a test.
-Fixture/run scopes, dynamic test trees, and automatic parameter
-injection are future work.
+Explicit fixture/run scopes are available through TestServiceScope. Runtime-generated test trees and transparent parameter injection are outside the supported wrapper; use discovery-time sources and typed ServiceInvocation.
 
 DI owns only instances it creates. Instances registered with AddSingleton(existingInstance) remain
 caller-owned. Microsoft DI may stop disposal of remaining services within a scope after one disposer
@@ -121,6 +124,8 @@ Quarantine is not durable across process restarts and does not coordinate separa
 ```sh
 dotnet pack src/TestHarbor -c Release --no-restore
 dotnet pack src/TestHarbor.NUnit -c Release --no-restore
+dotnet pack src/TestHarbor.Testing -c Release --no-restore
+python3 tools/verify_compatibility.py
 ```
 
 These create local alpha packages; nothing is published to NuGet automatically.
@@ -163,7 +168,7 @@ Detailed acceptance requirements are in `docs/REQUIREMENTS-v0.2.md`.
 
 ## JUnit gap analysis and next tasks
 
-The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Next-release requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Runtime gaps remain planned; XML documentation enforcement is delivered.
+The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Next-release requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Version 0.3 delivers the feasible wrapper features and records explicit alternatives for capabilities that require NUnit internals.
 
 Follow the [XML documentation policy](docs/XML-DOCUMENTATION.md) for source, tests, examples and tools. The [generated code reference](docs/api.html) includes every C# project.
 
@@ -174,3 +179,15 @@ Use `[RequiresResource("Bench/Supply")]` on a HarborFixture class or test method
 The wrapper reads NUnit's public property hierarchy for the exact discovered case. It never resolves overloaded methods by name. This supports generic and parameterized tests, without relying on display names. Reserved metadata keys are `TestHarbor.Resource.Exclusive` and `TestHarbor.Resource.SharedRead`; do not set them manually. Resource names appear in test metadata and should not contain secrets.
 
 All requirements are acquired together before derived setup and retained through extension/service cleanup. Acquisition remains process-local and happens during setup; it does not make NUnit's scheduler resource-aware. These attributes require HarborFixture and have no locking effect on ordinary NUnit fixtures. Constructors and one-time setup remain outside the lease. Empty names and invalid access modes are rejected when NUnit constructs the attribute during discovery.
+
+## Version 0.3 capabilities
+
+- Explicit lifecycle observations, error preservation and reusable extension conformance probes.
+- Fixture/run service owners with child-scope isolation, awaited closure and scope-lifetime resource leases.
+- Class/method extension profiles, pure execution conditions and typed configuration precedence.
+- Cooperative acquisition/start/body budgets, cleanup-overdue diagnostics and lifecycle misuse guards.
+- Owned non-DI resources, outcome-aware temporary directories, retained artifacts and lifecycle journals.
+- Typed CSV/value/enum/null/empty NUnit sources, typed service invocation and explicit nested contexts.
+- Optional single-host process broker with fencing, heartbeats with expiry quarantine, durable crash quarantine and explicit recovery.
+
+See [usage and examples](docs/USAGE-v0.3.md), [extension conformance](docs/EXTENSION-CONFORMANCE.md), [compatibility](docs/COMPATIBILITY.md) and [wrapper boundary decisions](docs/WRAPPER-BOUNDARIES.md). All APIs remain experimental alpha APIs. A closed feasibility task does not mean exact JUnit parity.

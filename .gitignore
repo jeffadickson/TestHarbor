@@ -3,3 +3,6 @@ obj/
 TestResults/
 _site/
 api/
+
+__pycache__/
+*.pyc

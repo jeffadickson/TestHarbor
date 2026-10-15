@@ -27,8 +27,7 @@ Fair queue improvements must preserve starvation bounds. Do not nest acquisition
 
 ## ADR-003: Dependency ownership
 
-Each session has its own root provider and async scope. This deliberately means singleton
-registrations are per-session. Microsoft DI owns factory/type-created services and controls their
+By default each session has its own root provider and async scope, so singleton registrations are per-session. An explicit TestServiceScope can instead own a fixture/run root with isolated child scopes. Microsoft DI owns factory/type-created services and controls their
 within-scope disposal order. It does not own externally supplied singleton instances.
 No provider is global and no service locator is stored in AsyncLocal.
 
@@ -81,3 +80,19 @@ RequiresResourceAttribute derives from NUnit's public PropertyAttribute. NUnit a
 The resulting requests concatenate with Resources overrides before the existing coordinator normalizes duplicates and acquires the complete set atomically. Attributes do not change lease lifetime, cancellation, quarantine, or scheduler behavior. No hardware is acquired during discovery. Plain NUnit fixtures without HarborFixture only receive metadata.
 
 Public API reference: https://docs.nunit.org/articles/nunit/writing-tests/attributes/property.html and https://docs.nunit.org/articles/nunit/writing-tests/TestContext.html .
+
+## ADR-006: Explicit scope and outcome boundaries (0.3)
+
+Reusable providers are caller-owned. They stop accepting sessions when closure begins, await child scopes, then dispose singleton services. Scope-lifetime hardware leases outlive singleton cleanup. Child cleanup failures fault the shared owner and propagate quarantine; overlapping child requests for parent-owned resources are rejected.
+
+Session observations distinguish explicit body timing from outer NUnit lifecycle snapshots. Observer exceptions remain failures. Owned non-DI resources unwind independently before DI cleanup; temporary directories are finalized after service disposal. Retained artifact stores and bounded lifecycle journals are independent of the coordinator ring.
+
+## ADR-007: Conformance and feasibility (0.3)
+
+The Testing package exposes a real-session probe. External adapter verifiers independently check final results and evidence for failures, conditions, filtering, attachments and lifecycle ownership. Package-consumer tests reference packed packages rather than project references.
+
+The [wrapper boundary decisions](WRAPPER-BOUNDARIES.md) resolve transparent injection and runtime node registration with explicit alternatives. Parameterized sources, contract fixtures and nested contexts retain NUnit discovery and reporting.
+
+## ADR-008: Single-host broker (0.3)
+
+An optional file broker uses exclusive open handles and flushed, atomically replaced state on a trusted local filesystem. Multi-resource acquisition drops partial handles before retrying. Active crash records fail closed; successful grants advance fencing generations. Optional heartbeat deadlines quarantine without releasing active ownership. Operator recovery requires obtaining the exclusive handle first. This is separate from the lightweight in-process reader/writer coordinator and is not a multi-host lease service.

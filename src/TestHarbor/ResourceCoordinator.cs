@@ -140,6 +140,11 @@ public sealed class ResourceCoordinator
         var pending = new Pending(normalized, owner ?? Guid.NewGuid().ToString("N"));
         lock (gate)
         {
+            if (owner is not null && active.Any(x => x.Owner == owner && x.Items.Any(heldItem => normalized.Any(item => item.Name == heldItem.Name))))
+            {
+                AddEvent("RecursiveRequest", pending.Owner, pending.Names, TimeSpan.Zero);
+                throw new InvalidOperationException("The same owner cannot reacquire an already-held resource; acquire the full set together.");
+            }
             if (QuarantineError(normalized) is { } error)
             {
                 AddEvent("Rejected", pending.Owner, pending.Names, TimeSpan.Zero);

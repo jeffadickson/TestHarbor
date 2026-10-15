@@ -38,3 +38,11 @@ The workflow now explicitly builds all projects, runs the documentation audit an
 Release build passed with zero warnings/errors. The suite now passes 34 library/integration tests and two example cases. Seven new real-runner cases cover method overload isolation, generic instantiations, inherited class/method metadata, explicit/declarative duplicate merging and invalid declarations. The existing parallel lifecycle fixture now uses a declarative lock and still verifies ownership through async service disposal; the supply example uses the same path through extension cleanup. All four deliberate failure probes still pass verification.
 
 XML coverage: 178 authored declarations with zero failures; the expanded HTML reference is regenerated. JG-001 / TH-007 is implemented; scheduler-level resource scheduling remains outside the wrapper contract.
+
+## 0.3 release-candidate evidence
+
+Local .NET 10 Release validation completed with zero warnings/errors. The normal suite passes 56 tests plus ten runnable example cases. The XML audit covers 425 authored declarations with zero gaps. The HTML reference covers all seven C# projects.
+
+External verifiers additionally check four intentional lifecycle failures, nine conformance scenarios (including conditions before acquisition), stable filtered source-case replay, filtered shared-fixture ownership, four retained attachments in both TRX and NUnit XML, and cross-process broker exclusion/fencing/crash recovery/heartbeat-expiry quarantine. All three NuGet packages include XML documentation and a clean temporary consumer restores and executes them.
+
+Compatibility is limited to the pinned NUnit/.NET baseline and documented wrapper semantics. The new CI workflow runs these gates on Linux, Windows and macOS. The Actions run associated with the 0.3 commit supplies its platform evidence; prior run links above are historical validation only. See WRAPPER-BOUNDARIES.md for explicit feasibility decisions and single-host broker limits.

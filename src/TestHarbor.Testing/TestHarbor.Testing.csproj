@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><PackageReadmeFile>README.md</PackageReadmeFile><Description>Conformance helpers for TestHarbor extension authors.</Description></PropertyGroup><ItemGroup><ProjectReference Include="../TestHarbor/TestHarbor.csproj"/></ItemGroup><ItemGroup><None Include="../../README.md" Pack="true" PackagePath="/" /></ItemGroup></Project>

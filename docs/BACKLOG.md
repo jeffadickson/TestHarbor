@@ -14,16 +14,16 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
   setup, cleanup failure aggregation and async cancellation rules before implementation.
 - [x] TH-009 — Resource quarantine policy. Failed hardware cleanup must support refusing
   later owners until an operator or recovery action clears the fault.
-- [ ] TH-010 — Fixture and run service scopes. Specify parallel sharing and ownership,
+- [x] TH-010 — Fixture and run service scopes. Specify parallel sharing and ownership,
   prove cleanup when only a subset of tests is selected, and keep explicit per-test defaults.
 - [x] TH-011 — Diagnostics: lease wait time, owner/test IDs, held duration, cancellation,
   and blocked-resource snapshots with public NUnit progress output. Automated leak detection remains future work.
-- [ ] TH-012 — Cross-process broker. Fenced leases, heartbeat expiry, crash recovery,
+- [x] TH-012 — Cross-process broker. Fenced leases, heartbeat expiry, crash recovery,
   and tests proving two host processes cannot use the same device concurrently.
-- [ ] TH-013 — Runtime-generated test feasibility. Evaluate public adapter capabilities;
+- [x] TH-013 — Runtime-generated test feasibility. Evaluate public adapter capabilities;
   preserve wrapper-only constraint. Use TestCaseSource when discovery-time data suffices.
 - [x] TH-014 — Linux, Windows and macOS CI passed; see docs/VALIDATION.md for the run and tested commit.
-- [ ] TH-015 — Add supported NUnit/.NET version matrix, package identity and release policy.
+- [x] TH-015 — Add supported NUnit/.NET version matrix, package identity and release policy.
 
 ## GitHub tracking
 
@@ -35,3 +35,7 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
 ## Expanded JUnit gap backlog
 
 The [next-release task index](REQUIREMENTS-v0.3.md) now provides the canonical prioritized backlog for the [full Java comparison](JUNIT-GAP-ANALYSIS.md), preserving existing issues #1–#4 and adding #5–#16.
+
+## Version 0.3 disposition
+
+The remaining JG requirements are implemented or resolved by explicit wrapper-boundary decisions. See [requirements and evidence](REQUIREMENTS-v0.3.md). Cross-process support is single-host and never revokes leases on heartbeat expiry. Runtime node registration and transparent constructor/method injection close with supported alternatives, not hidden NUnit internals.
