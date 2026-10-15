@@ -17,8 +17,10 @@ NUnit3TestAdapter 6.1.0, Microsoft.NET.Test.Sdk 17.14.1.
 - Sources contain no NUnit internal namespace imports or reflection into NUnit.
 - Generated HTML API reference includes all documented public member entries.
 
-The three-OS CI workflow is provided but has not run remotely. Windows/macOS are not
-claimed validated. Runtime-generated test reporting, cross-process leases, and hardware
+GitHub Actions run [38805161497](https://github.com/jeffadickson/TestHarbor/actions/runs/38805161497)
+passed on ubuntu-latest, windows-latest and macos-latest for implementation commit
+`bfcd52159931920e7b223c583cfa77fdd4902914`. Each job ran locked restore, the normal suite,
+the four deliberate failure probes, HTML documentation generation and both package builds. Runtime-generated test reporting, cross-process leases, and hardware
 safety behavior are not implemented or validated.
 
 0.2 adds checks for partial-start rollback, reverse extension cleanup, aggregation of all stop

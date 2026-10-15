@@ -22,7 +22,7 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
   and tests proving two host processes cannot use the same device concurrently.
 - [ ] TH-013 — Runtime-generated test feasibility. Evaluate public adapter capabilities;
   preserve wrapper-only constraint. Use TestCaseSource when discovery-time data suffices.
-- [ ] TH-014 — Validate CI on Windows and macOS; currently local verification is Linux only.
+- [x] TH-014 — Linux, Windows and macOS CI passed; see docs/VALIDATION.md for the run and tested commit.
 - [ ] TH-015 — Add supported NUnit/.NET version matrix, package identity and release policy.
 
 ## GitHub tracking
