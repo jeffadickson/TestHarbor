@@ -47,3 +47,5 @@ The remaining JG requirements are implemented or resolved by explicit wrapper-bo
 - [x] TH-017 — Expanded instrument acceptance suite and explanatory logs ([issue #18](https://github.com/jeffadickson/TestHarbor/issues/18)); see [bench demonstration](BENCH-DEMO.md).
 
 - [x] TH-018 — Runnable plain NUnit/TestHarbor charger comparison and benefit walkthrough ([issue #19](https://github.com/jeffadickson/TestHarbor/issues/19)).
+
+- [x] TH-019 — Software-only service, shared-catalog and file-export examples ([issue #20](https://github.com/jeffadickson/TestHarbor/issues/20)).

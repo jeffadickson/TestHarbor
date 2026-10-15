@@ -4,6 +4,8 @@
 tests are discovered, run, asserted and reported.** The benefit is a reusable policy for shared
 resources and failure recovery, especially when many tests use the same instruments.
 
+For examples without hardware, see [application services, shared catalogs and file export](SOFTWARE-EXAMPLES.md).
+
 ## A concrete job: test a five-volt charger
 
 You have a charger under test, an electronic load, and a voltmeter. At 0.1 A, 0.5 A and 1.0 A,

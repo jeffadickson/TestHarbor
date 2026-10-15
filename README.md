@@ -18,6 +18,18 @@ Both versions run the same measurement; the walkthrough shows what TestHarbor re
 the fixture and what it adds on failure. For pure unit tests without shared resources,
 plain NUnit is usually sufficient.
 
+## Software-only examples
+
+TestHarbor also manages software test infrastructure. See the [software examples](docs/SOFTWARE-EXAMPLES.md):
+
+- **Shopping cart:** reusable DI registration with isolated per-test service state, without locks.
+- **Shared catalog:** coordinate reset/insert/read/reset across tests using one simulated database environment.
+- **Invoice export:** clean up successful working directories and preserve failed-input diagnostics and attachments.
+
+```sh
+dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~Software --logger "console;verbosity=detailed"
+```
+
 ## Run it
 
 Install a .NET 10 SDK and Python 3. Run the complete CI checks locally:

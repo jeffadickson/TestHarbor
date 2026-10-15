@@ -83,3 +83,13 @@ quarantine policy rather than claiming identical failure guarantees.
 
 The normal suite now contains 56 library tests plus 24 example cases (80 total).
 Issue #19 records the corresponding three-platform CI evidence.
+
+## Software-only examples
+
+Seven cases add isolated shopping-cart DI scopes, shared catalog reset lifecycles, and real
+JSON-to-text invoice exports with success cleanup and failed-input retention. The catalog is
+an in-memory stand-in, not evidence of database-driver compatibility. Three export cases attach
+retained text and provenance files. These cases require no external services or equipment.
+
+The normal suite now contains 56 library tests plus 31 example cases (87 total).
+Issue #20 records the corresponding full verification and three-platform CI results.
