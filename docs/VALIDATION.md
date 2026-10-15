@@ -32,3 +32,9 @@ requests, recovery guards, already-held shared readers, detached diagnostics and
 The 56-capability matrix maps to 16 requirements and GitHub tasks. Local Release validation passed with zero compiler warnings/errors, 29 normal tests, four independently verified intentional failures, and locked restore. The Roslyn audit checked 160 authored declarations with zero failures; five negative documentation probes and one positive probe passed. The compiler produces 200 reference entries, including synthesized record members, so that count differs from authored declarations.
 
 The workflow now explicitly builds all projects, runs the documentation audit and its self-tests on all three operating systems, and generates the expanded reference. The run linked above is previous runtime validation; the Actions run for this documentation commit supplies its own CI evidence. New runtime requirements remain planned.
+
+## 0.2.1 declarative-resource validation
+
+Release build passed with zero warnings/errors. The suite now passes 34 library/integration tests and two example cases. Seven new real-runner cases cover method overload isolation, generic instantiations, inherited class/method metadata, explicit/declarative duplicate merging and invalid declarations. The existing parallel lifecycle fixture now uses a declarative lock and still verifies ownership through async service disposal; the supply example uses the same path through extension cleanup. All four deliberate failure probes still pass verification.
+
+XML coverage: 178 authored declarations with zero failures; the expanded HTML reference is regenerated. JG-001 / TH-007 is implemented; scheduler-level resource scheduling remains outside the wrapper contract.

@@ -19,7 +19,7 @@ public abstract class HarborFixture
         ?? throw new InvalidOperationException("Services are available only during the per-test lifecycle.");
 
     /// <summary>Declares all resources this test will need; may inspect public NUnit TestContext.</summary>
-    /// <value>The complete set of required resources for this test.</value>
+    /// <value>Additional resource requirements, merged with inherited RequiresResource declarations.</value>
     protected virtual IEnumerable<ResourceRequest> Resources => [];
 
     /// <summary>Registers this test's services; singleton registrations are session-local.</summary>
@@ -31,7 +31,7 @@ public abstract class HarborFixture
     [SetUp]
     public async Task OpenHarborSessionAsync()
     {
-        session = await TestSession.OpenAsync(Resources, ConfigureServices,
+        session = await TestSession.OpenAsync(Resources.Concat(RequiresResourceAttribute.CurrentRequirements()), ConfigureServices,
             cancellationToken: TestContext.CurrentContext.CancellationToken,
             options: new TestSessionOptions { Owner = Owner });
     }

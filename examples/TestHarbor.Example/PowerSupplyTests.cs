@@ -6,13 +6,10 @@ namespace TestHarbor.Example;
 
 // NUnit still discovers, executes and reports these ordinary test cases.
 /// <summary>Demonstrates ordinary NUnit test cases protected by a TestHarbor resource lease.</summary>
+[RequiresResource("DemoBench/PowerSupply")]
 [Parallelizable(ParallelScope.All)]
 public sealed class PowerSupplyTests : HarborFixture
 {
-    /// <summary>Declares the resource set retained throughout this fixture test and its cleanup.</summary>
-    /// <value>The complete set of required resources for this test.</value>
-    protected override IEnumerable<ResourceRequest> Resources => [new("DemoBench/PowerSupply")];
-
     /// <summary>Registers per-test services used by this fixture and its lifecycle verification.</summary>
     /// <param name="services">Collection receiving per-test dependency registrations.</param>
     protected override void ConfigureServices(IServiceCollection services)

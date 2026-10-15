@@ -1,6 +1,6 @@
 # JUnit / NUnit / TestHarbor gap analysis
 
-Reviewed **2026-10-15**. Baseline: **JUnit 6.1.3 / NUnit 5.0.0 / TestHarbor 0.2**.
+Reviewed **2026-10-15**. Baseline: **JUnit 6.1.3 / NUnit 5.0.0 / TestHarbor 0.2.1**.
 
 This is a functional comparison of Java JUnit Jupiter/Platform with C# NUnit and the current TestHarbor wrapper. It covers 56 capabilities, not every overload or every third-party Java library. No percentage of compatibility is implied. Versioned official JUnit documentation, official NUnit documentation and local implementation evidence are linked for each row.
 
@@ -96,7 +96,7 @@ Existing StartAsync/StopAsync hooks surround the derived NUnit lifecycle; they a
 
 | ID / capability | JUnit | NUnit + current TestHarbor | Class | Decision / requirements | Evidence |
 |---|---|---|---|---|---|
-| G38 Named shared/exclusive resources | Scheduler-aware ResourceLock | Harbor atomically acquires sets at setup; no declarative attributes or scheduler integration | P | [JG-001](REQUIREMENTS-v0.3.md#jg-001) | [J19](https://docs.junit.org/6.1.3/writing-tests/parallel-execution.html) [L2](../src/TestHarbor/ResourceCoordinator.cs) [L3](../src/TestHarbor.NUnit/HarborFixture.cs) |
+| G38 Named shared/exclusive resources | Scheduler-aware ResourceLock | Harbor merges inherited RequiresResource metadata with dynamic overrides and atomically acquires during setup; no scheduler integration | P | [JG-001](REQUIREMENTS-v0.3.md#jg-001) | [J19](https://docs.junit.org/6.1.3/writing-tests/parallel-execution.html) [L2](../src/TestHarbor/ResourceCoordinator.cs) [L3](../src/TestHarbor.NUnit/HarborFixture.cs) [L8](../src/TestHarbor.NUnit/RequiresResourceAttribute.cs) |
 | G39 Parallelism configuration | Execution modes and worker strategies | NUnit parallel controls remain responsible for scheduling | N | REUSE | [J19](https://docs.junit.org/6.1.3/writing-tests/parallel-execution.html) [N0](https://docs.nunit.org/articles/nunit/writing-tests/attributes.html) |
 | G40 Whole-fixture isolation | Isolated | NUnit NonParallelizable provides related isolation; validate boundaries in compatibility tests | N | REUSE | [J19](https://docs.junit.org/6.1.3/writing-tests/parallel-execution.html) [N0](https://docs.nunit.org/articles/nunit/writing-tests/attributes.html) |
 | G41 Runtime resource requirements | Dynamic lock providers | Resources override can compute a full set before session startup; it does not alter discovery | H | DELIVERED | [J19](https://docs.junit.org/6.1.3/writing-tests/parallel-execution.html) [L3](../src/TestHarbor.NUnit/HarborFixture.cs) |
@@ -144,7 +144,7 @@ Existing StartAsync/StopAsync hooks surround the derived NUnit lifecycle; they a
 ## Implementation order
 
 1. JG-016 XML documentation enforcement (delivered in this change).
-2. JG-012 conformance kit, then JG-014 compatibility policy and JG-004 lifecycle contracts; JG-001 declarations can proceed independently.
+2. JG-012 conformance kit, then JG-014 compatibility policy and JG-004 lifecycle contracts; JG-001 declarative resources are delivered in 0.2.1.
 3. JG-002 scopes, JG-005 conditions, JG-010 budgets and JG-011 artifacts; JG-006 ownership follows outcome/artifact contracts.
 4. JG-003 profiles, JG-007 typed templates, JG-008 injection feasibility and JG-009 contexts.
 5. JG-013 runtime discovery feasibility and JG-015 cross-process broker only after their prerequisites.

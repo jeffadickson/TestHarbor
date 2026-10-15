@@ -6,6 +6,7 @@ using TestHarbor.NUnit;
 namespace TestHarbor.Tests;
 
 /// <summary>Verifies that public NUnit hooks retain resources and services through the derived lifecycle.</summary>
+[RequiresResource("LifecycleProbe")]
 [Parallelizable(ParallelScope.All)]
 public sealed class LifecycleTests : HarborFixture
 {
@@ -13,9 +14,6 @@ public sealed class LifecycleTests : HarborFixture
     private static readonly ConcurrentDictionary<string, int> States = new();
     /// <summary>Counts active tests to detect overlap before resource ownership is released.</summary>
     private static int active;
-    /// <summary>Declares the resource set retained throughout this fixture test and its cleanup.</summary>
-    /// <value>The complete set of required resources for this test.</value>
-    protected override IEnumerable<ResourceRequest> Resources => [new("LifecycleProbe")];
     /// <summary>Registers per-test services used by this fixture and its lifecycle verification.</summary>
     /// <param name="services">Collection receiving per-test dependency registrations.</param>
     protected override void ConfigureServices(IServiceCollection services) => services.AddScoped(_ =>

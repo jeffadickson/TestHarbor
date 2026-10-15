@@ -39,7 +39,7 @@ for category in dict.fromkeys(f['category'] for f in DATA['features']):
         lines.append('| ' + ' | '.join(map(cell, [f['id'] + ' ' + f['feature'], f['junit'], f['current'], f['status'], requirements, sources])) + ' |')
 lines += ['', '## Implementation order', '',
 '1. JG-016 XML documentation enforcement (delivered in this change).',
-'2. JG-012 conformance kit, then JG-014 compatibility policy and JG-004 lifecycle contracts; JG-001 declarations can proceed independently.',
+'2. JG-012 conformance kit, then JG-014 compatibility policy and JG-004 lifecycle contracts; JG-001 declarative resources are delivered in 0.2.1.',
 '3. JG-002 scopes, JG-005 conditions, JG-010 budgets and JG-011 artifacts; JG-006 ownership follows outcome/artifact contracts.',
 '4. JG-003 profiles, JG-007 typed templates, JG-008 injection feasibility and JG-009 contexts.',
 '5. JG-013 runtime discovery feasibility and JG-015 cross-process broker only after their prerequisites.', '',

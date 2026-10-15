@@ -21,3 +21,10 @@ XML/HTML API documentation, locked dependencies, and a three-OS CI workflow defi
 - Documented every authored C# declaration, including private helpers, tests, examples and documentation tooling.
 - Added a Roslyn documentation audit and negative self-tests to every CI platform.
 - Expanded generated XML/HTML references to all C# projects. Runtime behavior is unchanged.
+
+## 0.2.1-alpha.1
+
+- Added RequiresResource attributes for fixture and method ownership using public NUnit property metadata.
+- Combined inherited declarations and dynamic requirements with exclusive-wins duplicate handling.
+- Verified overloaded, generic and parameterized cases, inherited overrides and full-lifecycle ownership.
+- Updated the runnable simulated supply example, XML reference and JG-001/TH-007 tracking.

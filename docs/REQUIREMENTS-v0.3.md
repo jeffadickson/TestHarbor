@@ -6,7 +6,7 @@ These requirements follow the [56-capability analysis](JUNIT-GAP-ANALYSIS.md). �
 
 | Requirement | Priority | Task | Status |
 |---|---|---|---|
-| [JG-001 Declarative resource requirements](#jg-001) | P1 | [#1](https://github.com/jeffadickson/TestHarbor/issues/1) | planned |
+| [JG-001 Declarative resource requirements](#jg-001) | P1 | [#1](https://github.com/jeffadickson/TestHarbor/issues/1) | implemented |
 | [JG-002 Fixture and run service scopes](#jg-002) | P1 | [#2](https://github.com/jeffadickson/TestHarbor/issues/2) | planned |
 | [JG-003 Reusable extension profiles and registration](#jg-003) | P2 | [#5](https://github.com/jeffadickson/TestHarbor/issues/5) | planned |
 | [JG-004 Lifecycle phase and outcome contracts](#jg-004) | P1 | [#6](https://github.com/jeffadickson/TestHarbor/issues/6) | planned |
@@ -26,13 +26,13 @@ These requirements follow the [56-capability analysis](JUNIT-GAP-ANALYSIS.md). �
 <a id="jg-001"></a>
 ## JG-001 — Declarative resource requirements
 
-P1 · [#1](https://github.com/jeffadickson/TestHarbor/issues/1) · planned
+P1 · [#1](https://github.com/jeffadickson/TestHarbor/issues/1) · implemented
 
 Combine class and method declarations without changing NUnit internals.
 
 Acceptance criteria:
 
-- Use exact public method identity or validated source-generated metadata; never resolve an overloaded method by name alone.
+- Use NUnit-attached exact-case metadata, exact public method identity or validated source-generated metadata; never resolve an overloaded method by name alone.
 - Merge inherited class/method requirements and explicit Resources overrides; exclusive access wins duplicate names.
 - Cover generic and parameterized methods and retain ownership through all derived setup/teardown and extension cleanup.
 - Document that these locks run during setup and do not make NUnit scheduling resource-aware.

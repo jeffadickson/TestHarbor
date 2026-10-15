@@ -1,6 +1,6 @@
 # TestHarbor
 
-Version **0.2.0-alpha.1** · working project name · .NET 10 · NUnit 5
+Version **0.2.1-alpha.1** · working project name · .NET 10 · NUnit 5
 
 TestHarbor is a companion wrapper around NUnit. NUnit remains responsible for discovery,
 assertions, execution, filtering, and reports. No NUnit fork, internal API references,
@@ -35,13 +35,9 @@ using TestHarbor;
 using TestHarbor.NUnit;
 
 /// <summary>Demonstrates isolated supply access through the NUnit wrapper.</summary>
+[RequiresResource("Bench-A/Supply-1")]
 public sealed class SupplyTests : HarborFixture
 {
-    /// <summary>Declares the supply required by each test.</summary>
-    /// <value>The exclusive supply resource request.</value>
-    protected override IEnumerable<ResourceRequest> Resources =>
-        [new("Bench-A/Supply-1")];
-
     /// <summary>Registers the per-test supply client.</summary>
     /// <param name="services">The session service registrations.</param>
     protected override void ConfigureServices(IServiceCollection services) =>
@@ -99,7 +95,7 @@ Readers must truly be safe to overlap: an instrument query that changes device s
 Keep HarborFixture's InstancePerTestCase lifecycle. Do not override it with SingleInstance or hide
 its lifecycle methods. Constructors and OneTimeSetUp are outside the lease. Registration callbacks
 must only register services, not acquire hardware. Do not leave fire-and-forget work running after a test.
-Fixture/run scopes, dynamic test trees, declarative method resource attributes, and automatic parameter
+Fixture/run scopes, dynamic test trees, and automatic parameter
 injection are future work.
 
 DI owns only instances it creates. Instances registered with AddSingleton(existingInstance) remain
@@ -170,3 +166,11 @@ Detailed acceptance requirements are in `docs/REQUIREMENTS-v0.2.md`.
 The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Next-release requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Runtime gaps remain planned; XML documentation enforcement is delivered.
 
 Follow the [XML documentation policy](docs/XML-DOCUMENTATION.md) for source, tests, examples and tools. The [generated code reference](docs/api.html) includes every C# project.
+
+## Declarative resources (0.2.1)
+
+Use `[RequiresResource("Bench/Supply")]` on a HarborFixture class or test method. Add `ResourceAccess.SharedRead` as the second argument when concurrent reads are safe. Multiple declarations and inherited fixture/method declarations combine with the `Resources` override. Duplicate names become one request, and exclusive access wins.
+
+The wrapper reads NUnit's public property hierarchy for the exact discovered case. It never resolves overloaded methods by name. This supports generic and parameterized tests, without relying on display names. Reserved metadata keys are `TestHarbor.Resource.Exclusive` and `TestHarbor.Resource.SharedRead`; do not set them manually. Resource names appear in test metadata and should not contain secrets.
+
+All requirements are acquired together before derived setup and retained through extension/service cleanup. Acquisition remains process-local and happens during setup; it does not make NUnit's scheduler resource-aware. These attributes require HarborFixture and have no locking effect on ordinary NUnit fixtures. Constructors and one-time setup remain outside the lease. Empty names and invalid access modes are rejected when NUnit constructs the attribute during discovery.

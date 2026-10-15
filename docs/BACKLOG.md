@@ -8,7 +8,7 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
 - [x] TH-004 — Runnable simulated instrument example.
 - [x] TH-005 — XML/HTML API documentation and locked build.
 - [x] TH-006 — Explicit setup/body/teardown/disposal failure verification.
-- [ ] TH-007 — Attribute ergonomics without internal NUnit access. Handle inheritance,
+- [x] TH-007 — Attribute ergonomics without internal NUnit access. Handle inheritance,
   overloaded methods, generic tests, and parameterized cases without ambiguous reflection.
 - [x] TH-008 — Ordered extension pipeline. Define before/after nesting, rollback on partial
   setup, cleanup failure aggregation and async cancellation rules before implementation.

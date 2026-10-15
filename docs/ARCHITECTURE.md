@@ -73,3 +73,11 @@ No outcome check relies on NUnit internal types. A test failure alone does not i
 
 Diagnostics retain 256 events and expose detached read-only status/owner lists. They contain no
 service instances. Resource quarantine reasons remain until reset; normal released state is removed.
+
+## Declarative resources (0.2.1)
+
+RequiresResourceAttribute derives from NUnit's public PropertyAttribute. NUnit attaches validated name/mode metadata to the discovered method case or fixture; HarborFixture reads AllPropertyValues for the current case hierarchy during base setup. This avoids ambiguous name reflection and retains inherited metadata for overloaded, generic and parameterized methods. Shared and exclusive declarations use separate reserved string keys.
+
+The resulting requests concatenate with Resources overrides before the existing coordinator normalizes duplicates and acquires the complete set atomically. Attributes do not change lease lifetime, cancellation, quarantine, or scheduler behavior. No hardware is acquired during discovery. Plain NUnit fixtures without HarborFixture only receive metadata.
+
+Public API reference: https://docs.nunit.org/articles/nunit/writing-tests/attributes/property.html and https://docs.nunit.org/articles/nunit/writing-tests/TestContext.html .
