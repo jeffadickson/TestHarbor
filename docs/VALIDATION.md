@@ -3,7 +3,7 @@
 Environment: Linux, .NET SDK 10.0.402, .NET runtime 10.0.13, NUnit 5.0.0,
 NUnit3TestAdapter 6.1.0, Microsoft.NET.Test.Sdk 17.14.1.
 
-- Release build: zero warnings, zero errors; public XML documentation required.
+- Release build: zero warnings, zero errors; XML documentation generated for every C# project.
 - Normal NUnit run: 27 core/integration cases plus 2 example cases passed.
 - Explicit failure verifier: 4 expected failures correctly identified (setup, body,
   teardown, async service cleanup). Each recorded cleanup while retaining its resource;
@@ -15,7 +15,7 @@ NUnit3TestAdapter 6.1.0, Microsoft.NET.Test.Sdk 17.14.1.
 - Async cleanup blocking test verifies a waiter cannot enter until disposal completes.
 - Scoped-disposal failure still attempts root singleton cleanup.
 - Sources contain no NUnit internal namespace imports or reflection into NUnit.
-- Generated HTML API reference includes all documented public member entries.
+- Generated HTML API reference includes public and private members, tests, examples and tooling (200 compiler XML entries).
 
 GitHub Actions run [38805161497](https://github.com/jeffadickson/TestHarbor/actions/runs/38805161497)
 passed on ubuntu-latest, windows-latest and macos-latest for implementation commit
@@ -26,3 +26,9 @@ safety behavior are not implemented or validated.
 0.2 adds checks for partial-start rollback, reverse extension cleanup, aggregation of all stop
 errors, cleanup despite cancellation, joined concurrent disposal, quarantine of queued and new
 requests, recovery guards, already-held shared readers, detached diagnostics and bounded history.
+
+## Gap-analysis and xdoc update
+
+The 56-capability matrix maps to 16 requirements and GitHub tasks. Local Release validation passed with zero compiler warnings/errors, 29 normal tests, four independently verified intentional failures, and locked restore. The Roslyn audit checked 160 authored declarations with zero failures; five negative documentation probes and one positive probe passed. The compiler produces 200 reference entries, including synthesized record members, so that count differs from authored declarations.
+
+The workflow now explicitly builds all projects, runs the documentation audit and its self-tests on all three operating systems, and generates the expanded reference. The run linked above is previous runtime validation; the Actions run for this documentation commit supplies its own CI evidence. New runtime requirements remain planned.

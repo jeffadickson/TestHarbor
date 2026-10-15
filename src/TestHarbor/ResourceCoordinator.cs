@@ -7,14 +7,21 @@ namespace TestHarbor;
 /// Leases are not reentrant; declare every needed resource in one request.</remarks>
 public sealed class ResourceCoordinator
 {
+    /// <summary>Serializes access to mutable ownership state.</summary>
     private readonly object gate = new();
+    /// <summary>Tracks reader counts and exclusive ownership for currently held resources.</summary>
     private readonly Dictionary<string, (int Readers, bool Writer)> held = new(StringComparer.Ordinal);
+    /// <summary>Stores pending atomic acquisitions in FIFO order.</summary>
     private readonly LinkedList<Pending> queue = new();
+    /// <summary>Retains resource failure reasons until explicit recovery.</summary>
     private readonly Dictionary<string, string> quarantine = new(StringComparer.Ordinal);
+    /// <summary>Tracks granted requests for owner diagnostics until their leases are released.</summary>
     private readonly HashSet<Pending> active = [];
+    /// <summary>Retains the most recent resource coordination events, capped at 256 entries.</summary>
     private readonly Queue<ResourceEvent> events = new();
 
     /// <summary>Returns detached resource state, including current owner labels and wait counts.</summary>
+    /// <returns>A detached read-only snapshot of active, waiting and quarantined resources.</returns>
     public IReadOnlyList<ResourceStatus> GetSnapshot()
     {
         lock (gate)
@@ -33,12 +40,15 @@ public sealed class ResourceCoordinator
     }
 
     /// <summary>Returns the latest 256 events in chronological order.</summary>
+    /// <returns>A detached chronological list containing at most 256 recent events.</returns>
     public IReadOnlyList<ResourceEvent> GetEvents()
     { lock (gate) return Array.AsReadOnly(events.ToArray()); }
 
     /// <summary>Clears a quarantine after caller-controlled recovery and after all owners leave.</summary>
     /// <param name="name">Resource recovered by the caller.</param>
     /// <param name="recoveryReason">Nonempty audit explanation; this method does not recover physical hardware.</param>
+    /// <exception cref="InvalidOperationException">The resource is held or is not quarantined.</exception>
+    /// <exception cref="ArgumentException">The resource name or recovery reason is empty.</exception>
     public void ResetQuarantine(string name, string recoveryReason)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -52,12 +62,20 @@ public sealed class ResourceCoordinator
         }
     }
 
+    /// <summary>Appends one coordination event and evicts old entries while the coordinator gate is held.</summary>
+    /// <param name="kind">Coordination event kind.</param>
+    /// <param name="owner">Diagnostic label identifying the acquisition or session.</param>
+    /// <param name="names">Formatted resource names for the event.</param>
+    /// <param name="elapsed">Measured wait or ownership duration.</param>
     private void AddEvent(string kind, string owner, string names, TimeSpan elapsed)
     {
         events.Enqueue(new(DateTimeOffset.UtcNow, kind, owner, names, elapsed));
         while (events.Count > 256) events.Dequeue();
     }
 
+    /// <summary>Finds the first quarantined resource in a normalized acquisition set.</summary>
+    /// <param name="items">Normalized resource requirements involved in this operation.</param>
+    /// <returns>The first quarantine exception, or null when all requested resources are available for consideration.</returns>
     private ResourceQuarantinedException? QuarantineError(ResourceRequest[] items)
     {
         foreach (var item in items)
@@ -65,6 +83,10 @@ public sealed class ResourceCoordinator
         return null;
     }
 
+    /// <summary>Marks a held resource set unsafe for reuse and rejects every affected queued request.</summary>
+    /// <param name="items">Normalized resource requirements involved in this operation.</param>
+    /// <param name="reason">Explanation recorded for resource quarantine.</param>
+    /// <param name="owner">Diagnostic label identifying the acquisition or session.</param>
     internal void Quarantine(ResourceRequest[] items, string reason, string owner)
     {
         lock (gate)
@@ -89,6 +111,7 @@ public sealed class ResourceCoordinator
     }
 
     /// <summary>Gets the coordinator shared by default across TestHarbor sessions in this process.</summary>
+    /// <value>The default coordinator shared by this loaded library instance.</value>
     public static ResourceCoordinator Shared { get; } = new();
 
     /// <summary>Waits for and atomically acquires all requested resources.</summary>
@@ -96,6 +119,9 @@ public sealed class ResourceCoordinator
     /// <param name="cancellationToken">Cancels waiting, but does not revoke a granted lease.</param>
     /// <param name="owner">Optional diagnostic label; a unique label is generated when omitted.</param>
     /// <returns>An idempotently disposable lease; retain it until cleanup is complete.</returns>
+    /// <exception cref="ResourceQuarantinedException">At least one requested resource requires recovery.</exception>
+    /// <exception cref="OperationCanceledException">Cancellation wins before resources are granted.</exception>
+    /// <exception cref="ArgumentException">A resource name or access mode is invalid.</exception>
     public async Task<ResourceLease> AcquireAsync(IEnumerable<ResourceRequest> requests,
         CancellationToken cancellationToken = default, string? owner = null)
     {
@@ -128,6 +154,9 @@ public sealed class ResourceCoordinator
         return await pending.Completion.Task.ConfigureAwait(false);
     }
 
+    /// <summary>Removes an acquisition if cancellation wins the race with granting its lease.</summary>
+    /// <param name="pending">Queued request to cancel if it has not been granted.</param>
+    /// <param name="token">Cancellation token recorded on the cancelled acquisition.</param>
     private void Cancel(Pending pending, CancellationToken token)
     {
         lock (gate)
@@ -140,6 +169,7 @@ public sealed class ResourceCoordinator
         }
     }
 
+    /// <summary>Grants complete compatible requests from the FIFO head without invoking caller code.</summary>
     private void Drain()
     {
         while (queue.First is { } node)
@@ -161,6 +191,8 @@ public sealed class ResourceCoordinator
         }
     }
 
+    /// <summary>Removes a granted request from ownership accounting and advances waiting acquisitions.</summary>
+    /// <param name="request">Granted request whose resources must be released.</param>
     private void Release(Pending request)
     {
         lock (gate)
@@ -177,14 +209,31 @@ public sealed class ResourceCoordinator
         }
     }
 
+    /// <summary>Stores normalized requirements, timing and completion state for one acquisition.</summary>
+    /// <param name="items">Normalized resource requirements involved in this operation.</param>
+    /// <param name="owner">Diagnostic label identifying the acquisition or session.</param>
     private sealed class Pending(ResourceRequest[] items, string owner)
     {
+        /// <summary>Gets the label used to correlate this operation with diagnostic events.</summary>
+        /// <value>The diagnostic owner label for this request or session.</value>
         internal string Owner { get; } = owner;
+        /// <summary>Formats the resource names for human-readable coordination events.</summary>
+        /// <value>Comma-separated normalized resource names.</value>
         internal string Names => string.Join(", ", Items.Select(x => x.Name));
+        /// <summary>Gets the monotonic timestamp captured when the request entered acquisition.</summary>
+        /// <value>A timestamp from the monotonic Stopwatch clock.</value>
         internal long Created { get; } = Stopwatch.GetTimestamp();
+        /// <summary>Gets or sets the monotonic timestamp when all requested resources were granted.</summary>
+        /// <value>The monotonic grant timestamp, set when ownership is assigned.</value>
         internal long Granted { get; set; }
+        /// <summary>Gets the normalized resource requirements owned by this request.</summary>
+        /// <value>The normalized resource requirements.</value>
         internal ResourceRequest[] Items { get; } = items;
+        /// <summary>Gets or sets the queue node used to remove a cancelled pending request.</summary>
+        /// <value>The queue node, whose List becomes null after removal.</value>
         internal LinkedListNode<Pending>? Node { get; set; }
+        /// <summary>Gets the asynchronous completion source for the granted lease or acquisition failure.</summary>
+        /// <value>A completion source yielding a lease or acquisition exception.</value>
         internal TaskCompletionSource<ResourceLease> Completion { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
     }

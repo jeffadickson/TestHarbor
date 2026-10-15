@@ -7,10 +7,12 @@ public interface ITestExtension
     /// <summary>Initializes extension state after resources and services are available.</summary>
     /// <param name="context">Services and owner identity for this test session.</param>
     /// <param name="cancellationToken">Cooperative setup cancellation.</param>
+    /// <returns>A task completing when startup finishes, or faulting if initialization fails.</returns>
     Task StartAsync(TestExtensionContext context, CancellationToken cancellationToken);
 
     /// <summary>Cleans up partial or complete initialization; must tolerate a failed Start.</summary>
     /// <param name="context">The same context supplied to Start; services have not been disposed yet.</param>
+    /// <returns>A task completing when cleanup finishes, or faulting if cleanup fails.</returns>
     Task StopAsync(TestExtensionContext context);
 }
 
@@ -23,8 +25,10 @@ public sealed record TestExtensionContext(IServiceProvider Services, string Owne
 public sealed record TestSessionOptions
 {
     /// <summary>Gets the diagnostic owner label; null generates a unique ID.</summary>
+    /// <value>The diagnostic owner label for this request or session.</value>
     public string? Owner { get; init; }
 
     /// <summary>Gets whether extension/service cleanup failures quarantine this session's resources; defaults true.</summary>
+    /// <value>True by default; false permits reuse after reporting cleanup failure.</value>
     public bool QuarantineOnCleanupFailure { get; init; } = true;
 }

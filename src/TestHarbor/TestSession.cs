@@ -6,16 +6,30 @@ namespace TestHarbor;
 /// <remarks>Dispose only after test work has joined. Cleanup is awaited before resources are released.</remarks>
 public sealed class TestSession : IAsyncDisposable
 {
+    /// <summary>Owns session-local singleton services and dependency registration metadata.</summary>
     private readonly ServiceProvider root;
+    /// <summary>Owns scoped services created for this test session.</summary>
     private readonly AsyncServiceScope scope;
+    /// <summary>Retains all session resources until extension and service cleanup has finished.</summary>
     private readonly ResourceLease lease;
+    /// <summary>Stores the diagnostic identity and quarantine policy selected when the session opened.</summary>
     private readonly TestSessionOptions options;
+    /// <summary>Provides extensions with the per-test services and diagnostic identity during start and stop.</summary>
     private readonly TestExtensionContext context;
+    /// <summary>Records extensions before startup so partial initialization can be unwound in reverse.</summary>
     private readonly List<ITestExtension> entered = [];
+    /// <summary>Protects publication of the shared cleanup task for concurrent disposal callers.</summary>
     private readonly object disposeGate = new();
+    /// <summary>Stores the single cleanup task observed by all disposal callers.</summary>
     private Task? disposal;
+    /// <summary>Prevents new service resolution through the session once disposal has started.</summary>
     private int disposed;
 
+    /// <summary>Binds an owned service provider, async scope and resource lease into a test session.</summary>
+    /// <param name="root">Root provider owning session-local singleton services.</param>
+    /// <param name="scope">Async DI scope owning per-test services.</param>
+    /// <param name="lease">Granted resource set retained through all cleanup.</param>
+    /// <param name="options">Diagnostic identity and cleanup policy.</param>
     private TestSession(ServiceProvider root, AsyncServiceScope scope, ResourceLease lease, TestSessionOptions options)
     {
         this.root = root;
@@ -26,6 +40,7 @@ public sealed class TestSession : IAsyncDisposable
     }
 
     /// <summary>Gets the services scoped to this test session.</summary>
+    /// <value>The per-test service provider; unavailable outside the active session.</value>
     public IServiceProvider Services => Volatile.Read(ref disposed) == 0
         ? scope.ServiceProvider : throw new ObjectDisposedException(nameof(TestSession));
 
@@ -91,6 +106,8 @@ public sealed class TestSession : IAsyncDisposable
     /// <param name="coordinator">Optional resource coordinator.</param>
     /// <param name="cancellationToken">Cooperative cancellation passed to the body.</param>
     /// <param name="options">Cleanup policy and diagnostic identity.</param>
+    /// <returns>A task completing after the test body and cleanup; both failures are retained when necessary.</returns>
+    /// <exception cref="AggregateException">The body and cleanup both failed, or cleanup has multiple reported failures.</exception>
     public static async Task RunAsync(IEnumerable<ResourceRequest> resources,
         Func<TestSession, CancellationToken, Task> body, Action<IServiceCollection>? configure = null,
         ResourceCoordinator? coordinator = null, CancellationToken cancellationToken = default,
@@ -115,6 +132,8 @@ public sealed class TestSession : IAsyncDisposable
 
     /// <summary>Stops extensions, disposes services, and then releases ownership.</summary>
     /// <remarks>Concurrent callers join the same cleanup task and observe the same errors.</remarks>
+    /// <returns>A value task completing when cleanup finishes; cleanup failures propagate to the caller.</returns>
+    /// <exception cref="AggregateException">One or more extension or service cleanup operations failed.</exception>
     public ValueTask DisposeAsync()
     {
         lock (disposeGate)
@@ -131,12 +150,17 @@ public sealed class TestSession : IAsyncDisposable
         }
     }
 
+    /// <summary>Completes the published disposal promise with the cleanup result without losing exceptions.</summary>
+    /// <param name="completion">Published promise that all disposal callers await.</param>
+    /// <returns>A task completing after the shared disposal promise has been resolved.</returns>
     private async Task CompleteDisposalAsync(TaskCompletionSource completion)
     {
         try { await CleanupAsync().ConfigureAwait(false); completion.SetResult(); }
         catch (Exception error) { completion.SetException(error); }
     }
 
+    /// <summary>Unwinds extensions, disposes services, quarantines failed cleanup and finally releases resources.</summary>
+    /// <returns>A task completing after all cleanup attempts and lease release.</returns>
     private async Task CleanupAsync()
     {
         List<Exception> errors = [];

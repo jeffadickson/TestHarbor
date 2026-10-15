@@ -12,7 +12,10 @@ Install a .NET 10 SDK. Python 3 is needed only for documentation and failure-pro
 
 ```sh
 dotnet restore TestHarbor.sln --locked-mode
-dotnet test TestHarbor.sln -c Release
+dotnet build TestHarbor.sln -c Release --no-restore
+dotnet test TestHarbor.sln -c Release --no-build
+dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- .
+dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- --self-test
 python3 tools/verify_failure_probes.py
 python3 tools/build_docs.py
 ```
@@ -31,14 +34,21 @@ using NUnit.Framework;
 using TestHarbor;
 using TestHarbor.NUnit;
 
+/// <summary>Demonstrates isolated supply access through the NUnit wrapper.</summary>
 public sealed class SupplyTests : HarborFixture
 {
+    /// <summary>Declares the supply required by each test.</summary>
+    /// <value>The exclusive supply resource request.</value>
     protected override IEnumerable<ResourceRequest> Resources =>
         [new("Bench-A/Supply-1")];
 
+    /// <summary>Registers the per-test supply client.</summary>
+    /// <param name="services">The session service registrations.</param>
     protected override void ConfigureServices(IServiceCollection services) =>
         services.AddScoped<SupplyClient>(); // Your implementation, ideally IAsyncDisposable.
 
+    /// <summary>Checks the simulated supply output range.</summary>
+    /// <returns>A task completing after voltage verification.</returns>
     [Test]
     public async Task ReadsVoltage()
     {
@@ -71,7 +81,7 @@ A session opened inside the test body does not cover NUnit setup/teardown outsid
 - Explicit recovery, immutable resource snapshots, and bounded wait/ownership diagnostics.
 - Concurrent disposal callers await the same cleanup task.
 - Public-hook NUnit fixture with InstancePerTestCase for parallel fixture isolation.
-- Compiler-generated XML API documentation; missing public documentation fails the build.
+- Compiler-generated XML API documentation; all authored declarations are checked, including private helpers, tests and tools.
 - Generated HTML API reference and requirements, design decisions, and development tasks.
 
 ## Boundaries
@@ -154,3 +164,9 @@ Ordinary assertion failures do not quarantine if cleanup succeeds. Concurrent Di
 now join one task and repeat calls observe the same cleanup error if disposal failed.
 
 Detailed acceptance requirements are in `docs/REQUIREMENTS-v0.2.md`.
+
+## JUnit gap analysis and next tasks
+
+The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Next-release requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Runtime gaps remain planned; XML documentation enforcement is delivered.
+
+Follow the [XML documentation policy](docs/XML-DOCUMENTATION.md) for source, tests, examples and tools. The [generated code reference](docs/api.html) includes every C# project.

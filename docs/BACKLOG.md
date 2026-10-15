@@ -31,3 +31,7 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
 - TH-010: [issue #2](https://github.com/jeffadickson/TestHarbor/issues/2)
 - TH-012: [issue #3](https://github.com/jeffadickson/TestHarbor/issues/3)
 - TH-013: [issue #4](https://github.com/jeffadickson/TestHarbor/issues/4)
+
+## Expanded JUnit gap backlog
+
+The [next-release task index](REQUIREMENTS-v0.3.md) now provides the canonical prioritized backlog for the [full Java comparison](JUNIT-GAP-ANALYSIS.md), preserving existing issues #1–#4 and adding #5–#16.

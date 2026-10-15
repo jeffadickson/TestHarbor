@@ -14,3 +14,10 @@
 Initial standalone TestHarbor project: in-process resource coordination, per-test DI sessions,
 public-hook NUnit wrapper, runnable supply example, concurrency and lifecycle failure checks,
 XML/HTML API documentation, locked dependencies, and a three-OS CI workflow definition.
+
+## Documentation and gap-analysis update
+
+- Compared 56 JUnit/NUnit/TestHarbor capabilities and added 16 linked requirements/tasks.
+- Documented every authored C# declaration, including private helpers, tests, examples and documentation tooling.
+- Added a Roslyn documentation audit and negative self-tests to every CI platform.
+- Expanded generated XML/HTML references to all C# projects. Runtime behavior is unchanged.

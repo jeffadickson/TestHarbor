@@ -3,9 +3,12 @@ using NUnit.Framework;
 
 namespace TestHarbor.Tests;
 
+/// <summary>Verifies atomic acquisition, cancellation races and dependency cleanup semantics.</summary>
 [TestFixture]
 public class CoreTests
 {
+    /// <summary>Verifies that shared readers overlap and a writer waits for every reader to release.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ReadersOverlapAndWriterWaitsForAllReaders()
     {
@@ -20,6 +23,8 @@ public class CoreTests
         using var acquired = await writer.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies that exclusive ownership blocks readers while unrelated resources remain usable.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task WriterBlocksReadersButUnrelatedResourcesCanOverlap()
     {
@@ -32,6 +37,8 @@ public class CoreTests
         using var acquired = await reader.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies atomic resource sets and FIFO progress after cancelling the blocked head.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task RequestsAreAtomicAndCancellationRemovesQueueHead()
     {
@@ -46,6 +53,8 @@ public class CoreTests
         using var acquired = await b.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies duplicate requirements merge to exclusive and repeated release cannot corrupt accounting.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task DuplicateNamesMergeToExclusiveAndReleaseIsIdempotent()
     {
@@ -57,6 +66,8 @@ public class CoreTests
         using var acquired = await next.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies that a pre-cancelled request never takes ownership.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task CancelledRequestDoesNotAcquireResources()
     {
@@ -67,6 +78,8 @@ public class CoreTests
         using var acquired = await c.AcquireAsync([new("A")]).WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies invalid resource names and access modes fail before acquisition.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task BadNamesAndModesAreRejected()
     {
@@ -76,6 +89,8 @@ public class CoreTests
             await c.AcquireAsync([new("A", (ResourceAccess)99)]));
     }
 
+    /// <summary>Verifies 100 concurrent multi-resource writers never overlap, regardless of request order.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ConcurrentWritersNeverOverlap()
     {
@@ -91,6 +106,8 @@ public class CoreTests
         })).WaitAsync(TimeSpan.FromSeconds(10));
     }
 
+    /// <summary>Races cancellation against release and verifies resource reacquisition after either winner.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task CancellationGrantRacesDoNotLeakResources()
     {
@@ -106,6 +123,8 @@ public class CoreTests
         }
     }
 
+    /// <summary>Verifies scoped identity and retention of ownership until async service cleanup completes.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ServicesAreScopedAndAsyncCleanupHoldsTheLease()
     {
@@ -127,6 +146,8 @@ public class CoreTests
         await session.DisposeAsync();
     }
 
+    /// <summary>Verifies failed dependency registration releases acquired resources.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ConfigurationFailureReleasesTheLease()
     {
@@ -136,6 +157,8 @@ public class CoreTests
         using var acquired = await c.AcquireAsync([new("A")]).WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies both errors survive and failed cleanup requires explicit resource recovery.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task BodyAndCleanupFailuresAreBothPreservedAndLeaseIsReleased()
     {
@@ -152,6 +175,8 @@ public class CoreTests
         using var acquired = await c.AcquireAsync([new("A")]).WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>Verifies root singleton cleanup is attempted even after scoped disposal throws.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ScopedCleanupFailureStillDisposesRootSingleton()
     {
@@ -167,8 +192,17 @@ public class CoreTests
         Assert.That(disposed, Is.True);
     }
 
+    /// <summary>Invokes an injected async disposer to exercise cleanup timing and failures.</summary>
+    /// <param name="cleanup">Injected cleanup callback, which may block or throw.</param>
     private sealed class Cleanup(Func<Task> cleanup) : IAsyncDisposable
-    { public async ValueTask DisposeAsync() => await cleanup(); }
+    {
+        /// <summary>Awaits the injected cleanup callback, preserving its failure.</summary>
+        /// <returns>A value task completing when cleanup finishes; cleanup failures propagate to the caller.</returns>
+        public async ValueTask DisposeAsync() => await cleanup(); }
+    /// <summary>Invokes an injected singleton disposer to verify root cleanup after scoped failures.</summary>
+    /// <param name="cleanup">Injected cleanup callback, which may block or throw.</param>
     private sealed class SingletonCleanup(Action cleanup) : IDisposable
-    { public void Dispose() => cleanup(); }
+    {
+        /// <summary>Invokes the injected synchronous disposal callback once per DI-owned instance.</summary>
+        public void Dispose() => cleanup(); }
 }

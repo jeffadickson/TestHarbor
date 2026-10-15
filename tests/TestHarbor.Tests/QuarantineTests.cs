@@ -2,8 +2,11 @@ using NUnit.Framework;
 
 namespace TestHarbor.Tests;
 
+/// <summary>Verifies quarantine rejection, guarded recovery and resource diagnostics.</summary>
 public sealed class QuarantineTests
 {
+    /// <summary>Verifies quarantine rejects all affected waiters, including those behind an unrelated blocked head.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task QuarantineRejectsAllAffectedWaitersAndNewRequestsUntilRecovery()
     {
@@ -25,6 +28,8 @@ public sealed class QuarantineTests
         using var recovered = await c.AcquireAsync([new("A"), new("B")]);
     }
 
+    /// <summary>Verifies quarantine preserves existing readers while blocking new readers until recovery.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task ExistingSharedOwnersRetainOwnershipButNewReadersAreRejected()
     {
@@ -40,6 +45,8 @@ public sealed class QuarantineTests
         c.ResetQuarantine("A", "Device recovered");
     }
 
+    /// <summary>Verifies owner labels, waiting counts, immutable snapshots and event order.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task SnapshotsExposeOwnersAndWaitingAndRemainDetached()
     {
@@ -59,6 +66,8 @@ public sealed class QuarantineTests
         Assert.That(c.GetEvents().All(x => x.Elapsed >= TimeSpan.Zero), Is.True);
     }
 
+    /// <summary>Verifies history remains bounded and released leases cannot quarantine resources.</summary>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [Test]
     public async Task HistoryIsBoundedAndReleasedLeaseCannotQuarantine()
     {

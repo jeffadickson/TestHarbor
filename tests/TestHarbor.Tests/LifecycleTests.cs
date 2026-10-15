@@ -5,15 +5,23 @@ using TestHarbor.NUnit;
 
 namespace TestHarbor.Tests;
 
+/// <summary>Verifies that public NUnit hooks retain resources and services through the derived lifecycle.</summary>
 [Parallelizable(ParallelScope.All)]
 public sealed class LifecycleTests : HarborFixture
 {
+    /// <summary>Records each probe state at disposal to verify teardown precedes service cleanup.</summary>
     private static readonly ConcurrentDictionary<string, int> States = new();
+    /// <summary>Counts active tests to detect overlap before resource ownership is released.</summary>
     private static int active;
+    /// <summary>Declares the resource set retained throughout this fixture test and its cleanup.</summary>
+    /// <value>The complete set of required resources for this test.</value>
     protected override IEnumerable<ResourceRequest> Resources => [new("LifecycleProbe")];
+    /// <summary>Registers per-test services used by this fixture and its lifecycle verification.</summary>
+    /// <param name="services">Collection receiving per-test dependency registrations.</param>
     protected override void ConfigureServices(IServiceCollection services) => services.AddScoped(_ =>
         new Probe(TestContext.CurrentContext.Test.ID));
 
+    /// <summary>Initializes isolated probe state and detects overlapping resource owners.</summary>
     [SetUp]
     public void DerivedSetup()
     {
@@ -21,6 +29,9 @@ public sealed class LifecycleTests : HarborFixture
         Services.GetRequiredService<Probe>().State = 1;
     }
 
+    /// <summary>Verifies each parameterized case sees isolated services throughout setup, body and teardown.</summary>
+    /// <param name="number">Case identifier used to verify independent lifecycle state.</param>
+    /// <returns>A task completing when the verification and all awaited cleanup have finished.</returns>
     [TestCase(1)]
     [TestCase(2)]
     [TestCase(3)]
@@ -32,6 +43,7 @@ public sealed class LifecycleTests : HarborFixture
         Services.GetRequiredService<Probe>().State = number + 10;
     }
 
+    /// <summary>Confirms test body state and marks teardown completion before disposal.</summary>
     [TearDown]
     public void DerivedTeardown()
     {
@@ -39,6 +51,7 @@ public sealed class LifecycleTests : HarborFixture
         Services.GetRequiredService<Probe>().State = 100;
     }
 
+    /// <summary>Confirms every test probe reached teardown and released its active ownership count.</summary>
     [OneTimeTearDown]
     public static void VerifyCleanup()
     {
@@ -47,9 +60,15 @@ public sealed class LifecycleTests : HarborFixture
         Assert.That(active, Is.Zero);
     }
 
+    /// <summary>Carries per-test state and records its final value when the DI scope disposes it.</summary>
+    /// <param name="id">NUnit test identifier used to record disposal evidence.</param>
     private sealed class Probe(string id) : IAsyncDisposable
     {
+        /// <summary>Gets or sets the lifecycle stage observed by this per-test probe.</summary>
+        /// <value>The current numeric stage of the lifecycle probe.</value>
         public int State { get; set; }
+        /// <summary>Records final teardown state and decrements the active-owner counter after yielding.</summary>
+        /// <returns>A value task completing when cleanup finishes; cleanup failures propagate to the caller.</returns>
         public async ValueTask DisposeAsync()
         {
             await Task.Yield();
