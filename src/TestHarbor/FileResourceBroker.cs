@@ -100,7 +100,9 @@ public sealed class FileResourceBroker
         var stem = Path.Combine(root, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(name))));
         FileStream file;
         try { file = new FileStream(stem + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
-        catch (IOException error) when ((error.HResult & 0xffff) is 11 or 32 or 33) { return null; }
+        // Unix IOException carries errno: EWOULDBLOCK is 11 on Linux and 35 on macOS.
+        catch (IOException error) when ((error.HResult & 0xffff) is 11 or 32 or 33
+            || (OperatingSystem.IsMacOS() && (error.HResult & 0xffff) == 35)) { return null; }
         return new(name, stem + ".json", file);
     }
 

@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = json.loads((ROOT / 'docs/junit-gap-analysis.json').read_text())
+DATA = json.loads((ROOT / 'docs/junit-gap-analysis.json').read_text(encoding='utf-8'))
 LABELS = {'N': 'Native NUnit; reuse', 'P': 'Partial coverage; wrapper work', 'A': 'Existing advantage or domain enhancement', 'B': 'Wrapper boundary; feasibility required', 'H': 'TestHarbor delivered', 'X': 'Platform-specific or outside scope'}
 
 
@@ -45,7 +45,7 @@ lines += ['', '## Delivery order', '',
 '5. JG-013 closes with a documented wrapper boundary; JG-015 ships a single-host broker with explicit recovery.', '',
 '## Maintenance', '',
 'Edit `junit-gap-analysis.json`, then run `python tools/build_gap_docs.py`. Requirement acceptance criteria and task links are generated from that same source. Re-review official versioned documentation when changing the NUnit/JUnit baseline. Status reflects implementation, not merely the existence of a task.', '']
-(ROOT / 'docs/JUNIT-GAP-ANALYSIS.md').write_text('\n'.join(lines))
+(ROOT / 'docs/JUNIT-GAP-ANALYSIS.md').write_text('\n'.join(lines), encoding='utf-8')
 lines = ['# TestHarbor next-release requirements and tasks', '',
 'These requirements follow the [56-capability analysis](JUNIT-GAP-ANALYSIS.md). Version 0.3 delivers the feasible wrapper behavior; feasibility requirements close with explicit alternatives and documented boundaries. Existing v0.1/v0.2 requirements remain applicable. P0 is the current documentation gate; P1 is foundational delivery; P2 is ergonomics; P3 is later feasibility or distributed infrastructure.', '',
 '## Task index', '', '| Requirement | Priority | Task | Status |', '|---|---|---|---|']
@@ -60,5 +60,5 @@ for r in DATA['requirements']:
         lines += ['', 'Implementation evidence: ' + ', '.join(f'[{path}](../{path})' for path in r['evidence']) + '.']
 lines += ['', '## Definition of done', '',
 'Each task requires a public-API-only design, explicit ownership/cancellation/error semantics, acceptance evidence, XML documentation for every authored C# declaration, generated reference updates and a green three-platform CI run. Feasibility tasks may finish with a documented no-go and supported alternative; they must not quietly introduce NUnit internals.', '']
-(ROOT / 'docs/REQUIREMENTS-v0.3.md').write_text('\n'.join(lines))
+(ROOT / 'docs/REQUIREMENTS-v0.3.md').write_text('\n'.join(lines), encoding='utf-8')
 print(f"Rendered {len(DATA['features'])} capabilities and {len(DATA['requirements'])} requirements.")

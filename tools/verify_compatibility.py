@@ -12,7 +12,7 @@ version = ET.parse(root / 'Directory.Build.props').findtext('.//Version')
 for source in (root / 'src').rglob('*.cs'):
     if 'obj' in source.parts or 'bin' in source.parts:
         continue
-    assert 'NUnit.Framework.Internal' not in source.read_text(), source
+    assert 'NUnit.Framework.Internal' not in source.read_text(encoding='utf-8'), source
 packages = ('TestHarbor', 'TestHarbor.NUnit', 'TestHarbor.Testing')
 with tempfile.TemporaryDirectory(prefix='testharbor-consumer-') as directory:
     folder = Path(directory)
@@ -42,8 +42,15 @@ internal static class Program
     }
 }
 ''')
+    # A config file preserves URI syntax across platform-specific CLI source parsing.
+    config = ET.Element('configuration')
+    sources = ET.SubElement(config, 'packageSources')
+    ET.SubElement(sources, 'clear')
+    ET.SubElement(sources, 'add', key='local', value=str(feed))
+    ET.SubElement(sources, 'add', key='nuget.org', value='https://api.nuget.org/v3/index.json')
+    ET.ElementTree(config).write(folder / 'NuGet.Config', encoding='utf-8', xml_declaration=True)
     dotnet = os.environ.get('DOTNET', 'dotnet')
-    for args in ([dotnet, 'restore', '--source', str(feed), '--source', 'https://api.nuget.org/v3/index.json'],
+    for args in ([dotnet, 'restore', '--configfile', str(folder / 'NuGet.Config')],
                  [dotnet, 'run', '-c', 'Release', '--no-restore', '-p:UseSharedCompilation=false', '-m:1']):
         result = subprocess.run(args, cwd=folder, capture_output=True, text=True, timeout=180)
         assert result.returncode == 0, result.stdout + result.stderr

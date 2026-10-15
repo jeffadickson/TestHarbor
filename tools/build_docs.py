@@ -40,5 +40,5 @@ body{font:16px/1.6 system-ui,sans-serif;margin:0;background:#f3f5f8;color:#18243
 <input aria-label="Filter API members" placeholder="Filter members…" oninput="for(const a of document.querySelectorAll('article'))a.hidden=!a.textContent.toLowerCase().includes(this.value.toLowerCase())">
 ''' + ''.join(sections) + '</main></html>'
 output = root / 'docs/api.html'
-output.write_text(page)
+output.write_text(page, encoding="utf-8")
 print(f'Generated {output} ({len(sections)-len(projects)} documented code entries)')
