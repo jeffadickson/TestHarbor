@@ -1,6 +1,6 @@
 # Development tasks
 
-Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain stable; linked GitHub issues track upcoming work.
+Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain stable; linked GitHub issues track implementation and completion evidence.
 
 - [x] TH-001 — Independent multi-resource coordinator and race tests.
 - [x] TH-002 — Per-test scoped services and async cleanup.
@@ -34,8 +34,12 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
 
 ## Expanded JUnit gap backlog
 
-The [next-release task index](REQUIREMENTS-v0.3.md) now provides the canonical prioritized backlog for the [full Java comparison](JUNIT-GAP-ANALYSIS.md), preserving existing issues #1–#4 and adding #5–#16.
+The [version 0.3 task index](REQUIREMENTS-v0.3.md) now provides the canonical prioritized backlog for the [full Java comparison](JUNIT-GAP-ANALYSIS.md), preserving existing issues #1–#4 and adding #5–#16.
 
 ## Version 0.3 disposition
 
 The remaining JG requirements are implemented or resolved by explicit wrapper-boundary decisions. See [requirements and evidence](REQUIREMENTS-v0.3.md). Cross-process support is single-host and never revokes leases on heartbeat expiry. Runtime node registration and transparent constructor/method injection close with supported alternatives, not hidden NUnit internals.
+
+## Contributor workflow
+
+- [x] TH-016 — One-command local/CI verification, SDK diagnosis and contributor onboarding ([issue #17](https://github.com/jeffadickson/TestHarbor/issues/17)).

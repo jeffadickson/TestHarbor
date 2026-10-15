@@ -8,27 +8,22 @@ reflection into NUnit, command replacement, or custom test engine is used.
 
 ## Run it
 
-Install a .NET 10 SDK. Python 3 is needed only for documentation and failure-probe verification.
+Install a .NET 10 SDK and Python 3. Run the complete CI checks locally:
 
 ```sh
-dotnet restore TestHarbor.sln --locked-mode
-dotnet build TestHarbor.sln -c Release --no-restore
-dotnet test TestHarbor.sln -c Release --no-build
-dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- .
-dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build -- --self-test
-python3 tools/verify_failure_probes.py
-python3 tools/verify_conformance.py
-python3 tools/verify_discovery.py
-python3 tools/verify_broker.py
-python3 tools/verify_attachments.py
-python3 tools/build_docs.py
+python tools/verify.py
 ```
 
-The deliberate failure and conformance fixtures are marked Explicit and excluded from a normal run.
-The verifier selects it explicitly and requires four expected failures plus independent
-cleanup and lock-release evidence. Its successful exit indicates the failure handling passed.
+Use `python3` where that is your Python command. The runner checks the SDK selected by
+`global.json`, restores locked dependencies, builds, tests, audits XML documentation,
+checks deliberate failures and cross-process behavior, generates API documentation,
+builds all three packages, and runs a clean package consumer. It stops at the first failure.
+CI uses this same command on Linux, Windows and macOS.
 
-For environments restricting MSBuild worker processes, add `-m:1 -p:UseSharedCompilation=false -nodeReuse:false`.
+Use `python tools/verify.py --doctor` to check prerequisites only. `DOTNET` can name an
+alternate .NET executable. See [contributor setup](CONTRIBUTING.md) for focused development
+commands, output locations and troubleshooting. Deliberate failure fixtures are Explicit;
+their verifier succeeds only when the expected failures and cleanup evidence agree.
 
 ## Minimal NUnit fixture
 
@@ -115,6 +110,7 @@ Quarantine is not durable across process restarts and does not coordinate separa
 
 - `src/TestHarbor`: NUnit-independent resource and service wrapper.
 - `src/TestHarbor.NUnit`: ordinary public NUnit fixture integration.
+- `src/TestHarbor.Testing`: reusable extension conformance helpers.
 - `tests/TestHarbor.Tests`: concurrency, service lifecycle, integration, and explicit failure probes.
 - `examples/TestHarbor.Example`: runnable simulated supply tests.
 - `docs`: requirements, architecture, roadmap, API reference, and validation evidence.
@@ -166,9 +162,9 @@ now join one task and repeat calls observe the same cleanup error if disposal fa
 
 Detailed acceptance requirements are in `docs/REQUIREMENTS-v0.2.md`.
 
-## JUnit gap analysis and next tasks
+## JUnit gap analysis and requirements
 
-The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Next-release requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Version 0.3 delivers the feasible wrapper features and records explicit alternatives for capabilities that require NUnit internals.
+The [complete capability matrix](docs/JUNIT-GAP-ANALYSIS.md) covers 56 JUnit/NUnit/TestHarbor capabilities. [Version 0.3 requirements](docs/REQUIREMENTS-v0.3.md) define 16 prioritized, linked GitHub tasks with acceptance criteria and dependencies. Version 0.3 delivers the feasible wrapper features and records explicit alternatives for capabilities that require NUnit internals.
 
 Follow the [XML documentation policy](docs/XML-DOCUMENTATION.md) for source, tests, examples and tools. The [generated code reference](docs/api.html) includes every C# project.
 

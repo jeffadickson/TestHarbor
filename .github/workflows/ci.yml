@@ -18,21 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - run: dotnet restore TestHarbor.sln --locked-mode
-      - run: dotnet build TestHarbor.sln -c Release --no-restore
-      - run: dotnet test TestHarbor.sln -c Release --no-build --no-restore --logger trx
-      - run: dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build --no-restore -- .
-      - run: dotnet run --project tools/TestHarbor.DocCheck -c Release --no-build --no-restore -- --self-test
-      - run: python tools/verify_failure_probes.py
-      - run: python tools/verify_conformance.py
-      - run: python tools/verify_discovery.py
-      - run: python tools/verify_broker.py
-      - run: python tools/verify_attachments.py
-      - run: python tools/build_docs.py
-      - run: dotnet pack src/TestHarbor -c Release --no-restore
-      - run: dotnet pack src/TestHarbor.NUnit -c Release --no-restore
-      - run: dotnet pack src/TestHarbor.Testing -c Release --no-restore
-      - run: python tools/verify_compatibility.py
+      - run: python tools/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

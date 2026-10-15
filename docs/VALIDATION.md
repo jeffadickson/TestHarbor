@@ -48,3 +48,14 @@ External verifiers additionally check four intentional lifecycle failures, ten c
 Compatibility is limited to the pinned NUnit/.NET baseline and documented wrapper semantics. The new CI workflow runs these gates on Linux, Windows and macOS. The Actions run associated with the 0.3 commit supplies its platform evidence; prior run links above are historical validation only. See WRAPPER-BOUNDARIES.md for explicit feasibility decisions and single-host broker limits.
 
 The first 0.3 CI run exposed macOS returning errno 35 for a contended exclusive open. The broker now treats that platform-specific EWOULDBLOCK as contention while allowing unrelated I/O failures to propagate. Documentation generation explicitly writes UTF-8 on every platform. Windows also exposed CLI source parsing treating the NuGet URL as a local path; the clean-consumer verifier now supplies an explicit NuGet.Config. The follow-up CI run is required to verify these platform fixes.
+
+## Unified contributor verification
+
+`python tools/verify.py` executes the full required gate sequence and is also the CI entry point.
+It uses locked restore, Release configuration, serialized MSBuild and disabled shared compilation
+consistently across environments. `--doctor` checks SDK resolution without changing build outputs.
+Package creation remains local; this command does not publish a release or upload to NuGet.
+
+The completed 0.3 backlog was validated by [run 38817174641](https://github.com/jeffadickson/TestHarbor/actions/runs/38817174641)
+on commit `d275e657694ee5630ef4411433ca446afb5cb4a5`, with all three platforms passing.
+Issue #17 tracks validation of the unified runner itself.
