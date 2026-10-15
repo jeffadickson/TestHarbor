@@ -59,3 +59,16 @@ Package creation remains local; this command does not publish a release or uploa
 The completed 0.3 backlog was validated by [run 38817174641](https://github.com/jeffadickson/TestHarbor/actions/runs/38817174641)
 on commit `d275e657694ee5630ef4411433ca446afb5cb4a5`, with all three platforms passing.
 Issue #17 tracks validation of the unified runner itself.
+
+## Expanded bench acceptance suite
+
+Eight additional normal example cases exercise a shared supply/load simulation: three
+measurement points with retained CSV evidence, two contention sizes (2 and 32 sessions),
+paused async shutdown with a waiting client, cancelled acquisition, and combined body/cleanup
+failure followed by blocked reuse and explicit recovery. Device events and active-client counts
+provide evidence independent of the coordinator snapshots. Barriers coordinate the cleanup
+scenario without timing-based sleeps. Each case owns its simulation and coordinator, so NUnit
+can run the cases in parallel without shared test state.
+
+The expanded normal suite contains 56 library tests plus 18 example cases (74 total).
+Issue #18 records the corresponding full verification and three-platform CI results.

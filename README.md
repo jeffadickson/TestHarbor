@@ -187,3 +187,14 @@ All requirements are acquired together before derived setup and retained through
 - Optional single-host process broker with fencing, heartbeats with expiry quarantine, durable crash quarantine and explicit recovery.
 
 See [usage and examples](docs/USAGE-v0.3.md), [extension conformance](docs/EXTENSION-CONFORMANCE.md), [compatibility](docs/COMPATIBILITY.md) and [wrapper boundary decisions](docs/WRAPPER-BOUNDARIES.md). All APIs remain experimental alpha APIs. A closed feasibility task does not mean exact JUnit parity.
+
+## Run the expanded bench demonstration
+
+The [instrument acceptance walkthrough](docs/BENCH-DEMO.md) uses a shared simulated supply
+and electronic load to demonstrate contention, asynchronous shutdown, cancellation,
+quarantine, recovery and retained measurement evidence. Explanatory messages accompany
+asserted behavior, both live and in captured NUnit output.
+
+```sh
+dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~BenchAcceptanceTests --logger "console;verbosity=detailed"
+```
