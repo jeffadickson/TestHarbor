@@ -55,3 +55,5 @@ The remaining JG requirements are implemented or resolved by explicit wrapper-bo
 - [x] TH-021 — Real NUnit lifecycle comparison: stale data after failed cleanup versus TestHarbor quarantine ([issue #22](https://github.com/jeffadickson/TestHarbor/issues/22)).
 
 - [x] TH-022 — File-backed SQLite cleanup rejection, persisted stale-row evidence and quarantine recovery ([issue #23](https://github.com/jeffadickson/TestHarbor/issues/23)).
+
+- [x] TH-023 — Queued export consumers during successful and failed asynchronous cleanup ([issue #24](https://github.com/jeffadickson/TestHarbor/issues/24)); see [software examples](SOFTWARE-EXAMPLES.md#5-a-consumer-already-waiting-during-export-cleanup).

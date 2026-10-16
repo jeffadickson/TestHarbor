@@ -173,3 +173,42 @@ dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~S
 The broader `FullyQualifiedName~Software` filter now runs eleven cases, including the earlier
 seven. Reference: Microsoft's [transaction documentation](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/transactions)
 and [connection-string options](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/connection-strings).
+
+## 5. A consumer already waiting during export cleanup
+
+[QueuedExportTests.cs](../examples/TestHarbor.Example/Software/QueuedExportTests.cs) covers the
+concurrent case missing from a sequential cleanup example: another session has already requested
+the same output while its previous owner is finishing asynchronous cleanup.
+
+An exporter may drain buffered work during shutdown. Finishing its test body does not establish
+that the output is ready for another test. These two passing cases write an actual temporary file
+and pause a small exporter extension during `StopAsync`. Explicit task barriers establish the
+ordering; there are no sleeps or assumptions about scheduler speed. The file finalization failure
+is deliberately injected, not an operating-system disk failure.
+
+| Observation | Successful finalization | Failed finalization |
+|---|---|---|
+| Producer body has ended; cleanup paused | Output is unfinished; lease still held | Output is unfinished; lease still held |
+| Consumer requests the same export | Snapshot confirms one queued request; body has not run | Snapshot confirms one queued request; body has not run |
+| Cleanup resumes | Writes complete output before releasing ownership | Throws; TestHarbor quarantines before releasing ownership |
+| Queued consumer | Runs and reads complete output | Receives quarantine error without running its body |
+| Different export resource afterward | Usable | Usable despite the orders resource's quarantine |
+
+NUnit runs these cases and checks their assertions. TestHarbor supplies ownership through the
+asynchronous cleanup phase and rejects affected requests already in the queue. Plain NUnit can
+implement equivalent behavior through its lifecycle hooks; a semaphore alone supplies mutual
+exclusion but does not remember failed finalization. No NUnit internals or scheduler changes are
+needed. The tests use concurrent sessions inside each NUnit case so the required interleaving is
+reproducible, independent of NUnit's scheduling of separate cases.
+
+The coordinator uses FIFO acquisition: an unrelated request can temporarily wait behind a blocked
+head request. The final check proves unrelated work remains usable after failure; it does not claim
+that unrelated work always bypasses a blocked queue. Coordination is process-local and only protects
+callers using the same coordinator and resource name. The example owns and removes its temporary
+files outside the sessions so both sessions can access the same output.
+
+Run just these examples:
+
+```sh
+dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~QueuedExportTests
+```

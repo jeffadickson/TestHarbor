@@ -116,3 +116,12 @@ a fresh connection verifies the committed row survived. The verifier requires th
 message in both first-test results, persisted-row evidence in both event streams, the stale read
 only in the plain path, and both successful recoveries. No external service or timing race is
 required. Issue #23 tracks this stronger database-backed proof; normal case counts remain 91.
+
+## Queued export consumers
+
+Two normal example cases prove a consumer already queued during asynchronous cleanup receives
+complete file output after success or a quarantine error after failure. Task barriers and ownership
+snapshots establish the interleaving without sleeps. Both verify unrelated resources remain usable;
+the failure case also verifies no queued consumer body ran and no ownership/waiter remains.
+The normal suite now contains 56 library tests and 37 example cases (93 total). Issue #24 tracks
+local and three-platform CI verification.
