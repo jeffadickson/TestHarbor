@@ -17,7 +17,7 @@ Repository: https://github.com/jeffadickson/TestHarbor . Local task IDs remain s
 - [x] TH-010 — Fixture and run service scopes. Specify parallel sharing and ownership,
   prove cleanup when only a subset of tests is selected, and keep explicit per-test defaults.
 - [x] TH-011 — Diagnostics: lease wait time, owner/test IDs, held duration, cancellation,
-  and blocked-resource snapshots with public NUnit progress output. Automated leak detection remains future work.
+  and blocked-resource snapshots with public NUnit progress output. Explicit end-of-run ownership auditing is delivered in TH-028; automatic boundary installation remains outside its scope.
 - [x] TH-012 — Cross-process broker. Fenced leases, heartbeat expiry, crash recovery,
   and tests proving two host processes cannot use the same device concurrently.
 - [x] TH-013 — Runtime-generated test feasibility. Evaluate public adapter capabilities;
@@ -66,3 +66,7 @@ Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). Implementation and CL
 - [x] TH-025 — Scoped constructor/method injection and lifecycle conformance ([#26](https://github.com/jeffadickson/TestHarbor/issues/26)).
 - [ ] TH-026 — NUnit adapter evidence delivered; IDE test explorer/debugger checks pending ([#27](https://github.com/jeffadickson/TestHarbor/issues/27)).
 - [x] TH-027 — Optional injection package, XML reference and walkthrough ([#28](https://github.com/jeffadickson/TestHarbor/issues/28)).
+
+## Ownership audit
+
+- [x] TH-028 — Opt-in end-of-run ownership audit with retained owner/waiter evidence ([#29](https://github.com/jeffadickson/TestHarbor/issues/29)); see [requirements and usage](OWNERSHIP-AUDIT.md).

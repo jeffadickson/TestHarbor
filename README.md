@@ -239,3 +239,6 @@ and `[FromServices]` method parameters while NUnit runs ordinary Test/TestCase/T
 Each case/retry owns a fresh scope through async cleanup. See the [walkthrough and supported subset](docs/NUNIT-INJECTION.md)
 and [requirements](docs/REQUIREMENTS-INJECTION.md). It targets exactly NUnit 5.0.0; IDE interaction
 checks remain open. Existing fixtures are unaffected unless explicitly opted in.
+
+For explicit end-of-run leak checks, see the [ownership audit](docs/OWNERSHIP-AUDIT.md):
+report forgotten sessions and queued owners without releasing resources before cleanup.

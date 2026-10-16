@@ -2,7 +2,11 @@
 
 ## Current implementation — 2026-10-16
 
-The normal suite now has 101 passing cases (56 library and 45 examples). The optional injection
+Four ownership-audit regressions verify empty-resource sessions, retained FIFO waiters,
+detached read-only evidence, duplicate owner labels and quarantine-only idle state.
+See [ownership audit](OWNERSHIP-AUDIT.md).
+
+The normal suite now has 105 passing cases (60 library and 45 examples). The optional injection
 package adds eight normal cases and an external verifier with discovery-only activation guards,
 filtered identity replay, ten fresh attempt scopes, seventeen deliberate failure/skip/cancellation
 cases and three invalid declarations. Exact lifecycle streams and post-release quarantine states

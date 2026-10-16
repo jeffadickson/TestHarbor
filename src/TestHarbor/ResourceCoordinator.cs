@@ -39,6 +39,34 @@ public sealed class ResourceCoordinator
         }
     }
 
+    /// <summary>Atomically audits every lease and waiter, including empty-resource sessions.</summary>
+    /// <returns>A detached read-only snapshot; this method never releases or cancels work.</returns>
+    public OwnershipAudit GetOwnershipAudit()
+    {
+        lock (gate)
+        {
+            var now = Stopwatch.GetTimestamp();
+            return new(DateTimeOffset.UtcNow,
+                Array.AsReadOnly(active.OrderBy(x => x.Owner, StringComparer.Ordinal).ThenBy(x => x.Created)
+                    .Select(x => new OwnershipEntry(x.Owner, Array.AsReadOnly(x.Items.ToArray()),
+                        Stopwatch.GetElapsedTime(x.Granted, now))).ToArray()),
+                Array.AsReadOnly(queue.Select(x => new OwnershipEntry(x.Owner, Array.AsReadOnly(x.Items.ToArray()),
+                    Stopwatch.GetElapsedTime(x.Created, now))).ToArray()),
+                Array.AsReadOnly(quarantine.OrderBy(x => x.Key, StringComparer.Ordinal)
+                    .Select(x => new QuarantineEntry(x.Key, x.Value)).ToArray()));
+        }
+    }
+
+    /// <summary>Fails if ownership remains at an explicitly chosen, quiescent suite boundary.</summary>
+    /// <remarks>Join all suite work first. This is a point-in-time check, not a shutdown gate.
+    /// Quarantine alone does not fail the ownership check and is never cleared.</remarks>
+    /// <exception cref="OutstandingOwnershipException">Active leases or queued acquisitions remain.</exception>
+    public void ThrowIfNotIdle()
+    {
+        var audit = GetOwnershipAudit();
+        if (!audit.IsIdle) throw new OutstandingOwnershipException(audit);
+    }
+
     /// <summary>Returns the latest 256 events in chronological order.</summary>
     /// <returns>A detached chronological list containing at most 256 recent events.</returns>
     public IReadOnlyList<ResourceEvent> GetEvents()
