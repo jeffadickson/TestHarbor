@@ -101,3 +101,12 @@ customer data, rollback after a real duplicate-primary-key error, and connection
 workspace deletion. New connections verify persisted state after session disposal. SQLite
 dependencies are example-only and locked. The normal suite now contains 56 library tests plus
 35 example cases (91 total). Issue #21 records validation and platform results.
+
+## Cleanup contamination comparison
+
+`tools/verify_cleanup_comparison.py` runs two actual NUnit fixtures (manual semaphore and
+TestHarbor session), each with ordered write, subsequent read and recovery steps. It expects
+four failures and two passes and verifies exact independent event files. The plain path reaches
+the next body and reads stale data; the TestHarbor path reports quarantine before executing it.
+Both recoveries verify zero rows. All six cases are Explicit; normal case counts remain 91.
+Retained TRX/events/logs under TestResults are included in CI artifacts. Issue #22 tracks validation.

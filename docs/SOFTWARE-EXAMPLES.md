@@ -14,6 +14,8 @@ those policies. These examples need no instruments, server, Docker installation 
 All eleven cases are ordinary NUnit cases. NUnit supplies discovery, parameterization, assertions
 and results. The application components contain no TestHarbor calls.
 
+For a runnable demonstration of the failure this prevents, see [stale data versus quarantine](CLEANUP-FAILURE-COMPARISON.md). It uses actual NUnit setup/teardown and verifies the reported outcomes.
+
 ## 1. Application services: a shopping cart
 
 Source: [ShoppingCartTests.cs](../examples/TestHarbor.Example/Software/ShoppingCartTests.cs).

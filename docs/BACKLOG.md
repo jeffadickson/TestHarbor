@@ -51,3 +51,5 @@ The remaining JG requirements are implemented or resolved by explicit wrapper-bo
 - [x] TH-019 — Software-only service, shared-catalog and file-export examples ([issue #20](https://github.com/jeffadickson/TestHarbor/issues/20)).
 
 - [x] TH-020 — Real SQLite transaction, rollback and file-lifetime examples ([issue #21](https://github.com/jeffadickson/TestHarbor/issues/21)).
+
+- [x] TH-021 — Real NUnit lifecycle comparison: stale data after failed cleanup versus TestHarbor quarantine ([issue #22](https://github.com/jeffadickson/TestHarbor/issues/22)).
