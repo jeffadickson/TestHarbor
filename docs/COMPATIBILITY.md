@@ -19,9 +19,9 @@ Evidence includes normal tests, parameterized and inherited fixtures, parallel c
 - Cooperative deadlines request cancellation; they never abandon cleanup or revoke active leases. Use NUnit CancelAfter for ordinary fixture test bodies; SessionBudgets.Body applies to explicit RunAsync bodies.
 - FileResourceBroker is optional and separate from the default in-process coordinator. Use one host and a trusted local filesystem; do not assume transparent coordination between the two implementations.
 
-## Planned injection integration
+## Optional injection integration
 
 [Injection requirements](REQUIREMENTS-INJECTION.md) define a separate optional package and a
-reviewed exception for types required by documented NUnit extension contracts. It is not yet
-implemented. Existing packages retain their current boundary. IDE compatibility must be tested
-separately from CLI CI before being claimed.
+reviewed exception for types required by documented NUnit extension contracts. The [experimental implementation](NUNIT-INJECTION.md) pins NUnit exactly to 5.0.0 and is tested
+through the CLI/adapter and a clean package consumer. Existing packages retain their current
+boundary. IDE compatibility must be tested separately before being claimed.

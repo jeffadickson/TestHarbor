@@ -174,6 +174,13 @@
           "NUnit": "[5.0.0, )",
           "TestHarbor": "[0.3.0-alpha.1, )"
         }
+      },
+      "testharbor.nunit.injection": {
+        "type": "Project",
+        "dependencies": {
+          "NUnit": "[5.0.0, 5.0.0]",
+          "TestHarbor.NUnit": "[0.3.0-alpha.1, )"
+        }
       }
     }
   }

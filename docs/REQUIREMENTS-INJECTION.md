@@ -1,7 +1,8 @@
-# Opt-in NUnit dependency injection — proposed requirements v0.1
+# Opt-in NUnit dependency injection — requirements v0.1
 
-Status: approved direction; implementation and feasibility evidence pending. This is follow-on
-work to 0.3, not functionality already shipped. Proposed package: `TestHarbor.NUnit.Injection`.
+Status: runtime implementation and CLI feasibility delivered in the experimental package
+`TestHarbor.NUnit.Injection`; IDE interaction evidence remains open. See the
+[implementation, restrictions and verification](NUNIT-INJECTION.md). This is follow-on work to 0.3.
 
 ## Purpose and architecture decision
 
@@ -14,8 +15,8 @@ The user approved investigating a narrow exception to the original blanket prohi
 extension contracts and the implementation types needed by those contracts, subject to an explicit
 reviewed allowlist and pinned compatibility tests. Existing packages retain their original boundary.
 This does not authorize a fork, modified NUnit binaries, private-member reflection, a replacement
-runner/adapter, or arbitrary use of NUnit internals. The current boundary checker remains unchanged
-until an implementation supplies the precise allowlist and negative checks.
+runner/adapter, or arbitrary use of NUnit internals. The boundary checker now enforces the exact nine implementation-type aliases documented in the
+implementation guide, with negative checks; it does not permit broad namespace imports.
 
 Relevant documented extension contracts:
 - [IFixtureBuilder](https://docs.nunit.org/api/NUnit.Framework.Interfaces.IFixtureBuilder.html)
@@ -133,10 +134,10 @@ P1; TH-027, [issue #28](https://github.com/jeffadickson/TestHarbor/issues/28).
 
 | Task | Deliverable | Status |
 |---|---|---|
-| TH-024 / #25 | Runtime feasibility and precise extension boundary | Open |
-| TH-025 / #26 | Binding, ownership and conformance implementation | Blocked by TH-024 |
-| TH-026 / #27 | Adapter and IDE compatibility evidence | Follows working prototype; required before support claims |
-| TH-027 / #28 | Optional package and documentation | Blocked by implementation and declared compatibility evidence |
+| TH-024 / #25 | Runtime feasibility and precise extension boundary | Implemented; real-runner evidence |
+| TH-025 / #26 | Binding, ownership and conformance implementation | Implemented for the documented initial subset |
+| TH-026 / #27 | Adapter and IDE compatibility evidence | CLI verified; GUI checks remain open |
+| TH-027 / #28 | Optional package and documentation | Implemented; no IDE support claims |
 
 The 0.3 explicit `ServiceInvocation` API remains supported. JG-008's earlier resolution is valid
 for the original architecture; this proposal reopens transparent injection under the newly approved

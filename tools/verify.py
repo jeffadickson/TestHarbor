@@ -55,9 +55,9 @@ def main():
         gates.append((label, [dotnet, 'run', '--project', 'tools/TestHarbor.DocCheck', '-c', 'Release',
                               '--no-build', '--no-restore', '--', *arguments]))
     for name in ('verify_failure_probes', 'verify_conformance', 'verify_discovery', 'verify_broker',
-                 'verify_attachments', 'verify_cleanup_comparison', 'build_docs'):
+                 'verify_attachments', 'verify_cleanup_comparison', 'verify_injection', 'build_docs'):
         gates.append((name, [sys.executable, str(ROOT / 'tools' / (name + '.py'))]))
-    for name in ('TestHarbor', 'TestHarbor.NUnit', 'TestHarbor.Testing'):
+    for name in ('TestHarbor', 'TestHarbor.NUnit', 'TestHarbor.Testing', 'TestHarbor.NUnit.Injection'):
         gates.append(('Package ' + name, [dotnet, 'pack', 'src/' + name, '-c', 'Release',
                                          '--no-build', '--no-restore', *build_flags]))
     gates.append(('Clean package consumer', [sys.executable, str(ROOT / 'tools/verify_compatibility.py')]))

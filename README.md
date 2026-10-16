@@ -3,8 +3,9 @@
 Version **0.3.0-alpha.1** · working project name · .NET 10 · NUnit 5
 
 TestHarbor is a companion wrapper around NUnit. NUnit remains responsible for discovery,
-assertions, execution, filtering, and reports. No NUnit fork, internal API references,
-reflection into NUnit, command replacement, or custom test engine is used.
+assertions, execution, filtering, and reports. The core integration uses public fixture APIs.
+The optional injection package uses a narrowly allowlisted NUnit extension layer. Neither path
+forks NUnit, reflects into its private state, or replaces the test engine/adapter.
 
 ## Why use it?
 
@@ -48,7 +49,7 @@ python tools/verify.py
 Use `python3` where that is your Python command. The runner checks the SDK selected by
 `global.json`, restores locked dependencies, builds, tests, audits XML documentation,
 checks deliberate failures and cross-process behavior, generates API documentation,
-builds all three packages, and runs a clean package consumer. It stops at the first failure.
+builds all four packages, and runs a clean package consumer. It stops at the first failure.
 CI uses this same command on Linux, Windows and macOS.
 
 Use `python tools/verify.py --doctor` to check prerequisites only. `DOTNET` can name an
@@ -88,8 +89,9 @@ public sealed class SupplyTests : HarborFixture
 See `examples/TestHarbor.Example/PowerSupplyTests.cs` for the complete runnable simulation.
 The base fixture acquires resources before derived SetUp and cleans up after derived TearDown.
 Services are per-test by default; even a singleton registration lives only for that session unless you explicitly select a shared TestServiceScope.
-NUnit test parameters remain ordinary TestCase/TestCaseSource data. Service injection is explicit
-through `Services`, not automatic injection into method parameters.
+With HarborFixture, NUnit parameters remain ordinary case data and services are accessed through
+`Services`. The optional [injection package](docs/NUNIT-INJECTION.md) additionally supports
+constructor dependencies and explicitly marked service parameters.
 
 For a test that already inherits another base class, use `TestSession.RunAsync` or
 `await using var session = await TestSession.OpenAsync(...)` in your own lifecycle code.
@@ -125,7 +127,7 @@ Readers must truly be safe to overlap: an instrument query that changes device s
 Keep HarborFixture's InstancePerTestCase lifecycle. Do not override it with SingleInstance or hide
 its lifecycle methods. Constructors and OneTimeSetUp are outside the lease. Registration callbacks
 must only register services, not acquire hardware. Do not leave fire-and-forget work running after a test.
-Explicit fixture/run scopes are available through TestServiceScope. Runtime-generated test trees and transparent parameter injection are outside the supported wrapper; use discovery-time sources and typed ServiceInvocation.
+Explicit fixture/run scopes are available through TestServiceScope. Runtime-generated test trees remain unsupported; use discovery-time sources. For service parameters, use typed ServiceInvocation or the optional injection package.
 
 DI owns only instances it creates. Instances registered with AddSingleton(existingInstance) remain
 caller-owned. Microsoft DI may stop disposal of remaining services within a scope after one disposer
@@ -230,8 +232,10 @@ asserted behavior, both live and in captured NUnit output.
 dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~BenchAcceptanceTests --logger "console;verbosity=detailed"
 ```
 
-## Planned constructor and method injection
+## Constructor and method injection
 
-[Requirements and tasks](docs/REQUIREMENTS-INJECTION.md) specify an optional NUnit injection
-package, runtime service scopes and IDE compatibility checks. This is planned work, not a shipped
-feature; ordinary NUnit and existing TestHarbor APIs retain their current behavior.
+The optional experimental `TestHarbor.NUnit.Injection` package supplies constructor dependencies
+and `[FromServices]` method parameters while NUnit runs ordinary Test/TestCase/TestCaseSource cases.
+Each case/retry owns a fresh scope through async cleanup. See the [walkthrough and supported subset](docs/NUNIT-INJECTION.md)
+and [requirements](docs/REQUIREMENTS-INJECTION.md). It targets exactly NUnit 5.0.0; IDE interaction
+checks remain open. Existing fixtures are unaffected unless explicitly opted in.

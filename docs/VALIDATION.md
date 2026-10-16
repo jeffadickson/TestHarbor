@@ -1,4 +1,17 @@
-# Validation — 2026-10-15
+# Validation
+
+## Current implementation — 2026-10-16
+
+The normal suite now has 101 passing cases (56 library and 45 examples). The optional injection
+package adds eight normal cases and an external verifier with discovery-only activation guards,
+filtered identity replay, ten fresh attempt scopes, seventeen deliberate failure/skip/cancellation
+cases and three invalid declarations. Exact lifecycle streams and post-release quarantine states
+are checked. The clean package consumer now runs an injected NUnit test from the four packages.
+See [injection evidence and IDE limitations](NUNIT-INJECTION.md). Historical sections below record
+what was true at each earlier milestone; their counts and unimplemented-feature statements are
+not the current project status.
+
+## Historical validation — 2026-10-15
 
 Environment: Linux, .NET SDK 10.0.402, .NET runtime 10.0.13, NUnit 5.0.0,
 NUnit3TestAdapter 6.1.0, Microsoft.NET.Test.Sdk 17.14.1.

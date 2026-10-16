@@ -91,8 +91,23 @@ Session observations distinguish explicit body timing from outer NUnit lifecycle
 
 The Testing package exposes a real-session probe. External adapter verifiers independently check final results and evidence for failures, conditions, filtering, attachments and lifecycle ownership. Package-consumer tests reference packed packages rather than project references.
 
-The [wrapper boundary decisions](WRAPPER-BOUNDARIES.md) resolve transparent injection and runtime node registration with explicit alternatives. Parameterized sources, contract fixtures and nested contexts retain NUnit discovery and reporting.
+The [wrapper boundary decisions](WRAPPER-BOUNDARIES.md) record the original 0.3 alternatives for transparent injection and runtime node registration. ADR-009 adds the separately approved injection exception. Parameterized sources, contract fixtures and nested contexts retain NUnit discovery and reporting.
 
 ## ADR-008: Single-host broker (0.3)
 
 An optional file broker uses exclusive open handles and flushed, atomically replaced state on a trusted local filesystem. Multi-resource acquisition drops partial handles before retrying. Active crash records fail closed; successful grants advance fencing generations. Optional heartbeat deadlines quarantine without releasing active ownership. Operator recovery requires obtaining the exclusive handle first. This is separate from the lightweight in-process reader/writer coordinator and is not a multi-host lease service.
+
+## ADR-009: Optional runtime injection through a narrow NUnit extension layer
+
+The user approved a separate `TestHarbor.NUnit.Injection` package using documented extension
+contracts and precisely allowlisted implementation types. Existing packages retain ADR-001.
+A custom fixture builder installs a type descriptor for runtime construction; method descriptors
+separate case data from services; a command wrapper closes the scope after NUnit teardown and
+fixture disposal. NUnit still executes the tests, including retries, repeats and async methods.
+No private reflection, framework binary patch, replacement engine or adapter is introduced.
+
+The per-attempt lifecycle, compatibility pin, nine allowed implementation types, rejection rules
+and external-runner evidence are specified in [the injection guide](NUNIT-INJECTION.md).
+Thread-pool bridging is necessary for NUnit's synchronous construction hook, so this initial
+version rejects apartment-bound services and one-time fixture lifecycle hooks. IDE interaction
+checks remain open; adapter/CLI success is not an IDE debugging claim.

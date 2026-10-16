@@ -1,8 +1,9 @@
 # Wrapper feasibility decisions — 0.3
 
 Follow-on decision (2026-10-16): [opt-in injection requirements](REQUIREMENTS-INJECTION.md)
-approve investigating a separate package with a narrowly allowlisted NUnit extension boundary.
-The restrictions and shipped behavior below describe 0.3; transparent injection is not yet implemented.
+define a separate package with a narrowly allowlisted NUnit extension boundary.
+The optional [injection implementation](NUNIT-INJECTION.md) now supports runtime constructors and
+method parameters. The original restrictions and decisions below describe the core 0.3 packages.
 
 Reviewed against NUnit 5.0.0 and .NET 10 on 2026-10-15. The architecture constraint remains: no NUnit fork, references to NUnit.Framework.Internal, reflection into NUnit execution objects, replacement engine or replacement adapter.
 
