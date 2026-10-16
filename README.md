@@ -18,7 +18,7 @@ Both versions run the same measurement; the walkthrough shows what TestHarbor re
 the fixture and what it adds on failure. For pure unit tests without shared resources,
 plain NUnit is usually sufficient.
 
-For a direct failure comparison, run the [stale-data cleanup experiment](docs/CLEANUP-FAILURE-COMPARISON.md).
+For a direct failure comparison using file-backed SQLite, run the [stale-data cleanup experiment](docs/CLEANUP-FAILURE-COMPARISON.md).
 It proves that a plain NUnit fixture with a manual lock can run its next test against leftover
 records after cleanup fails, whereas TestHarbor rejects reuse before the next body executes.
 

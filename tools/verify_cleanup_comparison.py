@@ -31,14 +31,16 @@ for item in results:
     seen.add((mode, method))
     assert item.attrib['outcome'] == ('Passed' if method == 'Recovery' else 'Failed'), ET.tostring(item)
     message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    if method == 'FirstTestWritesRecord':
+        assert 'SqliteException' in message and 'Injected reset failure' in message, message
     if method == 'NextTestExpectsEmptyTable':
         assert ('quarantin' in message.lower()) if mode == 'harbor' else ('stale test data' in message)
 assert seen == {(mode, method) for mode in ('plain', 'harbor')
                 for method in ('FirstTestWritesRecord', 'NextTestExpectsEmptyTable', 'Recovery')}
 assert (output / 'plain.txt').read_text().splitlines() == [
-    'write:1', 'reset-failed', 'read:1', 'reset-ok', 'recover', 'reset-ok', 'recovered-read:0']
+    'write:1', 'reset-failed', 'persisted-after-failure:1', 'read:1', 'reset-ok', 'recover', 'reset-ok', 'recovered-read:0']
 assert (output / 'harbor.txt').read_text().splitlines() == [
-    'write:1', 'reset-failed', 'recover', 'reset-ok', 'recovered-read:0']
+    'write:1', 'reset-failed', 'persisted-after-failure:1', 'recover', 'reset-ok', 'recovered-read:0']
 print('PASS: actual NUnit teardown failure permitted stale-data reuse with manual locking; '
       'TestHarbor rejected reuse before the next body and allowed verified recovery.')
 print(f'Evidence: {output}')

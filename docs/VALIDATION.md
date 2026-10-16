@@ -110,3 +110,9 @@ four failures and two passes and verifies exact independent event files. The pla
 the next body and reads stale data; the TestHarbor path reports quarantine before executing it.
 Both recoveries verify zero rows. All six cases are Explicit; normal case counts remain 91.
 Retained TRX/events/logs under TestResults are included in CI artifacts. Issue #22 tracks validation.
+
+The comparison now uses file-backed SQLite. A trigger rejects DELETE with a real SqliteException;
+a fresh connection verifies the committed row survived. The verifier requires that exception and
+message in both first-test results, persisted-row evidence in both event streams, the stale read
+only in the plain path, and both successful recoveries. No external service or timing race is
+required. Issue #23 tracks this stronger database-backed proof; normal case counts remain 91.

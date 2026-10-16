@@ -1,7 +1,7 @@
 # A concrete problem TestHarbor solves: one failed cleanup contaminates the next test
 
 Suppose integration test A inserts an order into a shared test database. Its assertion passes.
-During teardown, the database reset times out and the inserted order remains. Test B expects an
+During teardown, the database rejects the reset DELETE and the inserted order remains. Test B expects an
 empty table. What stops B from using that contaminated environment?
 
 **NUnit reports A's cleanup failure. TestHarbor additionally records that the named environment
@@ -10,9 +10,18 @@ must not be reused until recovery.** Those are different responsibilities.
 ## The executable comparison
 
 [CleanupFailureComparison.cs](../examples/TestHarbor.Example/Software/CleanupFailureComparison.cs)
-runs two actual NUnit fixtures with the same three ordered steps. The table is a deliberately
-small in-memory simulation; the reset timeout is injected deterministically. This tests a
-lifecycle policy, not a real database outage.
+runs two actual NUnit fixtures with the same three ordered steps against separate file-backed
+SQLite databases. A `BEFORE DELETE` trigger uses `RAISE(ABORT, 'Injected reset failure')` to
+reject cleanup deterministically. The first insert is committed; a fresh connection verifies
+that the row remains after the rejected DELETE. This is a real SQLite error, not a network
+outage or timeout simulation.
+
+Before the second acquisition, the experiment removes the trigger without deleting the row.
+Removing the fault does not repair the data or clear TestHarbor's quarantine. Recovery performs
+the DELETE, verifies zero rows through a fresh connection, and then clears quarantine. Connections
+are unpooled and disposed after every operation. One-time setup and teardown create and remove
+each fixture's temporary database directory; these are experiment infrastructure outside the
+per-test ownership comparison.
 
 The plain version owns a `SemaphoreSlim` and calls reset in `[TearDown]`, releasing the semaphore
 in `finally`. That is ordinary mutual exclusion: it prevents overlapping tests and avoids leaking
@@ -25,8 +34,8 @@ resource before releasing ownership. Both versions run under NUnit.
 | Step | Plain NUnit with manual locking | NUnit with TestHarbor |
 |---|---|---|
 | A writes one row | Body assertion passes | Body assertion passes |
-| A's reset times out | NUnit reports teardown failure; lock is released | NUnit reports teardown failure; resource is quarantined and released |
-| Reset service becomes available again | The old row is still present | The old row is still present |
+| A's reset DELETE is rejected | NUnit reports teardown failure; lock is released | NUnit reports teardown failure; resource is quarantined and released |
+| Reset-blocking trigger is removed | The old row is still present | The old row is still present |
 | B requests the shared table | Lock is available; B runs and reads **one stale row** | Acquisition fails with a quarantine error; **B's body never runs** |
 | Operator recovery | Reset succeeds and empty state is verified | Reset succeeds, empty state is verified, then quarantine is explicitly cleared |
 | Recovered read | Zero rows | Zero rows, under a newly granted session |
@@ -45,7 +54,8 @@ python tools/verify_cleanup_comparison.py
 ```
 
 The script selects the explicit fixtures and expects six results: four deliberate failures and
-two successful recovery steps. It also checks the failure reasons and exact event sequences.
+two successful recovery steps. It also checks the SQLite exception and injected error message,
+fresh-connection evidence of the surviving row, quarantine and stale-data failure reasons, and exact event sequences.
 It succeeds only if the plain path actually observed stale data, the TestHarbor path did not run
 the blocked body, and both recovery checks succeeded.
 

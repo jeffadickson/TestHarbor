@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
@@ -12,10 +13,28 @@ namespace TestHarbor.Example.Software;
 [NonParallelizable]
 public sealed class CleanupFailureComparison(bool useHarbor)
 {
-    /// <summary>Models the records in one shared test table.</summary>
-    private int rows;
-    /// <summary>Injects a transient reset failure without removing existing rows.</summary>
-    private bool resetFails;
+    /// <summary>Owns a separate file-backed database for this fixture's three-step experiment.</summary>
+    private readonly string directory = Path.Combine(Path.GetTempPath(), "testharbor-cleanup-" + Guid.NewGuid().ToString("N"));
+    /// <summary>Reads committed state through a fresh connection on every observation.</summary>
+    /// <value>The persisted number of orders.</value>
+    private long Rows
+    {
+        get
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM orders";
+            return (long)command.ExecuteScalar()!;
+        }
+    }
+
+    /// <summary>Creates experiment infrastructure outside the per-test ownership comparison.</summary>
+    [OneTimeSetUp]
+    public void CreateDatabase()
+    {
+        Directory.CreateDirectory(directory);
+        Execute("CREATE TABLE orders (id INTEGER PRIMARY KEY)");
+    }
     /// <summary>Provides the plain fixture's manual mutual-exclusion policy.</summary>
     private readonly SemaphoreSlim gate = new(1, 1);
     /// <summary>Records successful manual acquisition for safe teardown.</summary>
@@ -36,8 +55,8 @@ public sealed class CleanupFailureComparison(bool useHarbor)
         var method = TestContext.CurrentContext.Test.MethodName;
         TestContext.Out.WriteLine($"SCENARIO:{Mode}:{method}");
         if (method == nameof(Recovery)) return;
-        // The reset service is available again, but the old rows have not magically disappeared.
-        if (method == nameof(NextTestExpectsEmptyTable)) resetFails = false;
+        // Remove the injected fault without cleaning data or clearing quarantine.
+        if (method == nameof(NextTestExpectsEmptyTable)) Execute("DROP TRIGGER block_reset");
         if (useHarbor)
             session = await TestSession.OpenAsync([new("TestDatabase/Orders")],
                 services => services.AddScoped<ITestExtension>(_ => new ResetExtension(this)), coordinator);
@@ -52,11 +71,11 @@ public sealed class CleanupFailureComparison(bool useHarbor)
     [Test]
     public void FirstTestWritesRecord()
     {
-        Assert.That(rows, Is.Zero);
-        rows = 1;
-        resetFails = true;
+        Assert.That(Rows, Is.Zero);
+        Execute("INSERT INTO orders (id) VALUES (1)");
+        Execute("CREATE TRIGGER block_reset BEFORE DELETE ON orders BEGIN SELECT RAISE(ABORT, 'Injected reset failure'); END");
         Record("write:1");
-        Assert.That(rows, Is.EqualTo(1));
+        Assert.That(Rows, Is.EqualTo(1));
         TestContext.Out.WriteLine("The application assertion passed. The injected failure occurs later, in cleanup.");
     }
 
@@ -64,9 +83,9 @@ public sealed class CleanupFailureComparison(bool useHarbor)
     [Test, DependsOnTest(nameof(FirstTestWritesRecord), AllowFailure = true)]
     public void NextTestExpectsEmptyTable()
     {
-        Record("read:" + rows);
+        Record("read:" + Rows);
         TestContext.Out.WriteLine("Plain NUnit reached the next body with stale data; TestHarbor must reject acquisition before this body.");
-        Assert.That(rows, Is.Zero, "Previous cleanup failed: this is stale test data, not an application regression.");
+        Assert.That(Rows, Is.Zero, "Previous cleanup failed: this is stale test data, not an application regression.");
     }
 
     /// <summary>Performs an explicit reset, then verifies ownership and clean data after recovery.</summary>
@@ -75,20 +94,20 @@ public sealed class CleanupFailureComparison(bool useHarbor)
     public async Task Recovery()
     {
         Record("recover");
-        resetFails = false;
+        Execute("DROP TRIGGER IF EXISTS block_reset");
         Reset();
-        Assert.That(rows, Is.Zero);
+        Assert.That(Rows, Is.Zero);
         if (useHarbor)
         {
             coordinator.ResetQuarantine("TestDatabase/Orders", "Test table successfully reset and verified empty.");
             await TestSession.RunAsync([new("TestDatabase/Orders")], (_, _) =>
             {
-                Record("recovered-read:" + rows);
-                Assert.That(rows, Is.Zero);
+                Record("recovered-read:" + Rows);
+                Assert.That(Rows, Is.Zero);
                 return Task.CompletedTask;
             }, coordinator: coordinator);
         }
-        else Record("recovered-read:" + rows);
+        else Record("recovered-read:" + Rows);
         TestContext.Out.WriteLine("Recovery was performed and verified. TestHarbor's quarantine reset grants reuse; it does not clean the database itself.");
     }
 
@@ -107,20 +126,48 @@ public sealed class CleanupFailureComparison(bool useHarbor)
         }
     }
 
-    /// <summary>Disposes the manually allocated synchronization primitive after all scenario steps.</summary>
+    /// <summary>Removes fixture infrastructure after all steps; every database operation has closed its connection.</summary>
     [OneTimeTearDown]
-    public void CloseGate() => gate.Dispose();
+    public void CloseDatabase()
+    {
+        gate.Dispose();
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
 
-    /// <summary>Simulates database reset success or a transient failure before any records are removed.</summary>
+    /// <summary>Deletes committed orders, or propagates SQLite's trigger rejection with the row intact.</summary>
     private void Reset()
     {
-        if (resetFails)
+        try { Execute("DELETE FROM orders"); }
+        catch (SqliteException)
         {
             Record("reset-failed");
-            throw new IOException("Simulated database reset timeout; records remain.");
+            Assert.That(Rows, Is.EqualTo(1), "A fresh connection must still observe the committed order.");
+            Record("persisted-after-failure:1");
+            throw;
         }
-        rows = 0;
         Record("reset-ok");
+    }
+
+    /// <summary>Opens an unpooled connection to the fixture's real SQLite file.</summary>
+    /// <returns>An open connection that the caller must dispose.</returns>
+    private SqliteConnection OpenConnection()
+    {
+        var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = Path.Combine(directory, "orders.db"), Pooling = false
+        }.ToString());
+        try { connection.Open(); return connection; }
+        catch { connection.Dispose(); throw; }
+    }
+
+    /// <summary>Executes one committed SQL operation and closes its connection.</summary>
+    /// <param name="sql">Fixed scenario SQL, without external input.</param>
+    private void Execute(string sql)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.ExecuteNonQuery();
     }
 
     /// <summary>Writes independent scenario evidence so the external verifier can prove which bodies ran.</summary>
