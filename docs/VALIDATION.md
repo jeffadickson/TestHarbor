@@ -2,6 +2,9 @@
 
 ## Current implementation — 2026-10-16
 
+Six additional explicit injection diagnostic probes cover nested missing dependencies,
+cycles, factory exceptions/nulls/skips and constructor graph failures with scope cleanup.
+
 Eight software-only checkout comparison cases now verify transitive constructor/method
 injection, parallel case isolation, rejected-order side effects and stable filtered replay.
 

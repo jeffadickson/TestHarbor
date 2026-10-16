@@ -118,3 +118,27 @@ for item in invalid:
 print('PASS: injection discovery without activation; 8 cases/10 fresh attempts; filtered stable identity; '
       '17 failure/skip/cancellation probes; 3 invalid declarations; cleanup order and quarantine verified.')
 print(f'Evidence: {output}')
+
+folder, diagnostics = run('diagnostics', 'FullyQualifiedName~InjectionDiagnosticProbes|FullyQualifiedName~InjectionConstructorDiagnostic', expected_exit=1)
+assert len(diagnostics) == 6, [x.attrib for x in diagnostics]
+for item in diagnostics:
+    name = item.attrib['testName']
+    message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    assert 'unreachable-body' not in message and 'unreachable-constructor' not in message, message
+    if name == 'FactorySkips':
+        assert item.attrib['outcome'] == 'NotExecuted', item.attrib
+        assert 'factory-skip-marker' in message and 'InjectionResolutionException' not in message, message
+        continue
+    assert item.attrib['outcome'] == 'Failed', item.attrib
+    assert 'InjectionResolutionException' in message and "parameter 'service'" in message, message
+    member = '.ctor' if name == 'ConstructorGraphFails' else name
+    assert member in message, message
+    expected = {'NestedMissing': 'MissingDependency', 'ConstructorGraphFails': 'MissingDependency',
+                'Circular': 'circular dependency', 'FactoryFails': 'factory-error-marker',
+                'FactoryNull': 'factory returned null'}[name]
+    assert expected in message, message
+streams, finished = evidence(folder)
+assert len(streams) == len(finished) == 6, (len(streams), len(finished))
+assert all(x['quarantine'] is None for x in finished), finished
+assert all([x['phase'] for x in stream] == ['start', 'stop', 'service-dispose'] for stream in streams), streams
+print('PASS: six injection graph diagnostics retain parameter context, original cause, skip semantics and completed cleanup.')

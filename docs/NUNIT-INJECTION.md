@@ -74,7 +74,14 @@ registrations retain normal DI semantics and may produce different instances.
 Constructor parameters are all services. Method parameters are data unless explicitly marked
 `[FromServices]`; service parameters may appear before, between or after data parameters. Exactly
 one registration is required for each injected dependency, and null resolutions are rejected.
-Error messages name the fixture, member, parameter and service type, not service values.
+Runtime parameter resolution failures throw `InjectionResolutionException` with declaring type, member, parameter
+name and requested service type. Missing registrations, ambiguous registrations and null factories
+have distinct explanations. A missing transitive dependency, circular graph or throwing factory
+retains the original exception as `InnerException`, including its dependency-chain details and stack.
+The wrapper does not print service values; user/container inner exceptions can contain user text.
+NUnit result-control exceptions (such as Ignore) and cancellation pass through unchanged.
+Registration graphs validated during session startup still produce the container's validation
+errors before parameter binding; the parameter wrapper applies to runtime resolution.
 The resolver enumerates registrations to detect ambiguity; any instances created during that check
 remain owned by DI and are disposed during failure cleanup.
 
@@ -172,3 +179,16 @@ constructor/method NUnit case without project references.
 For each IDE, record versions and check run-all, single-case selection, rerun, source navigation,
 constructor/body breakpoints and async stacks before making a support claim. CLI evidence alone
 cannot establish those interactions. No IDE plugin is provided or required by the design.
+
+## Diagnostic requirements — TH-030 / issue #31
+
+- [x] Identify constructor or method injection boundaries for transitive activation errors.
+- [x] Preserve the original exception and stack as the inner exception.
+- [x] Distinguish missing, multiple and null resolutions without printing service values.
+- [x] Preserve NUnit result-control exceptions and cancellation.
+- [x] Verify real runner results for nested missing services, cycles, factory failures, null
+  factories, factory skips and constructor graph failures, including completed scope cleanup.
+
+The external verifier runs six additional explicit diagnostic probes. Five must fail with
+contextual diagnostics and one must remain skipped. These are separate from the seventeen
+existing lifecycle probes and do not change the normal passing-case count.

@@ -29,9 +29,16 @@ internal static class InjectionRuntime
     /// <returns>The sole registered non-null service.</returns>
     internal static object Resolve(TestSession session, ParameterInfo parameter)
     {
-        var matches = session.Services.GetServices(parameter.ParameterType).ToArray();
-        if (matches.Length != 1 || matches[0] is null)
-            throw new InvalidOperationException($"{parameter.Member.DeclaringType?.FullName}.{parameter.Member.Name} parameter '{parameter.Name}': expected exactly one {parameter.ParameterType.FullName} service; found {matches.Length}.");
+        object?[] matches;
+        try { matches = session.Services.GetServices(parameter.ParameterType).ToArray(); }
+        catch (Exception error) when (error is not ResultStateException and not OperationCanceledException)
+        {
+            throw new InjectionResolutionException(parameter, "dependency activation failed; inspect the inner exception for the dependency chain", error);
+        }
+        if (matches.Length != 1)
+            throw new InjectionResolutionException(parameter, $"expected exactly one registration; found {matches.Length}");
+        if (matches[0] is null)
+            throw new InjectionResolutionException(parameter, "the registered factory returned null");
         return matches[0]!;
     }
 
