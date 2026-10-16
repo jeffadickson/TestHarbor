@@ -25,6 +25,7 @@ TestHarbor also manages software test infrastructure. See the [software examples
 - **Shopping cart:** reusable DI registration with isolated per-test service state, without locks.
 - **Shared catalog:** coordinate reset/insert/read/reset across tests using one simulated database environment.
 - **Invoice export:** clean up successful working directories and preserve failed-input diagnostics and attachments.
+- **Real SQLite orders:** commit and roll back transactions, verify persisted state from new connections, and close handles before deleting test databases.
 
 ```sh
 dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~Software --logger "console;verbosity=detailed"

@@ -93,3 +93,11 @@ retained text and provenance files. These cases require no external services or 
 
 The normal suite now contains 56 library tests plus 31 example cases (87 total).
 Issue #20 records the corresponding full verification and three-platform CI results.
+
+## Real SQLite integration
+
+Four additional software cases exercise file-backed SQLite committed writes, parameterized
+customer data, rollback after a real duplicate-primary-key error, and connection closure before
+workspace deletion. New connections verify persisted state after session disposal. SQLite
+dependencies are example-only and locked. The normal suite now contains 56 library tests plus
+35 example cases (91 total). Issue #21 records validation and platform results.

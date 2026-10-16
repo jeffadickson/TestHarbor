@@ -9,8 +9,9 @@ those policies. These examples need no instruments, server, Docker installation 
 | Shopping cart | Add prices and calculate a discount | Reusable service registration and fresh per-test service scopes |
 | Shared catalog | Insert and read product records | Named environment ownership and ordered reset callbacks |
 | Invoice exporter | Read JSON, validate an amount and write an invoice | Isolated scratch directories, failure retention, redacted retained evidence |
+| SQLite orders | Commit orders and roll back a failed batch in a real database | Ordered disposal of transactions/connections and database-file lifetime |
 
-All seven cases are ordinary NUnit cases. NUnit supplies discovery, parameterization, assertions
+All eleven cases are ordinary NUnit cases. NUnit supplies discovery, parameterization, assertions
 and results. The application components contain no TestHarbor calls.
 
 ## 1. Application services: a shopping cart
@@ -107,7 +108,7 @@ removal explicitly. Artifacts are copied to retained storage before temporary fi
 dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~Software --logger "console;verbosity=detailed"
 ```
 
-Expect seven passing cases: two shopping-cart, two shared-catalog, and three invoice-export cases.
+Expect eleven passing cases: two shopping-cart, two shared-catalog, three invoice-export, and four SQLite cases.
 The negative invoice is an expected exception asserted by NUnit, not an ignored failure.
 
 Messages labeled `Software/DI`, `Software/shared state`, `Software/files` and
@@ -117,3 +118,56 @@ by CI. The three export cases each attach a text file and JSON provenance sideca
 
 Run `python tools/verify.py` for the complete repository checks. All examples use the same
 .NET 10 baseline and XML documentation policy as the libraries.
+
+## 4. Real database integration: SQLite orders
+
+Source: [SqliteOrderTests.cs](../examples/TestHarbor.Example/Software/SqliteOrderTests.cs).
+
+These four cases use actual file-backed SQLite databases through `Microsoft.Data.Sqlite`,
+not the in-memory catalog stand-in above. The example-only dependency and its native SQLite
+runtime packages are pinned in the example project's lockfile. Nothing is added to the
+TestHarbor library packages, and no database server or Docker installation is required.
+
+- **Committed orders:** insert a customer in a transaction, commit, close the session, then
+  read the value from a new read-only connection. A name containing an apostrophe verifies
+  that SQL parameters carry application data correctly.
+- **Failed batch:** insert one row and then deliberately violate its primary key. The error
+  escapes the session. Disposal of the uncommitted transaction rolls it back; an independent
+  connection sees zero rows. The session retains the failed database for inspection.
+- **Successful cleanup:** create a database with the default directory-retention policy,
+  then check the connection is closed and the working directory no longer exists.
+
+The ownership pattern is deliberately small:
+
+```csharp
+var connection = session.Owned.Add(new SqliteConnection(connectionString));
+connection.Open();
+var transaction = session.Owned.Add(connection.BeginTransaction());
+// Execute parameterized statements, then commit only when the operation succeeds.
+transaction.Commit();
+```
+
+TestHarbor disposes explicitly owned objects in reverse registration order: transaction first,
+connection second, followed by temporary-directory cleanup. Register a connection before
+opening it so a failed open still has an owner. Do not also register these objects with DI
+or another ownership stack. Individual commands use ordinary `using` blocks.
+
+**SQLite supplies commit, constraint checks and rollback.** TestHarbor supplies the ownership
+order and workspace-retention policy. A plain NUnit test can implement the same behavior with
+`using` blocks and `try/finally`; the wrapper is useful when many integration tests need a
+consistent lifecycle for several resources and diagnostic files.
+
+Each case uses a unique database file, so cases may run in parallel without named locks.
+Connection pooling is disabled to give these short-lived files explicit handle lifetimes.
+The tests use synchronous SQLite commands inside an asynchronous session; they do not claim
+asynchronous database I/O. Retained directories are explicitly removed after verification,
+so the examples do not leave databases behind. Transactions do not undo an external HTTP
+request or another non-database side effect.
+
+```sh
+dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~SqliteOrderTests --logger "console;verbosity=detailed"
+```
+
+The broader `FullyQualifiedName~Software` filter now runs eleven cases, including the earlier
+seven. Reference: Microsoft's [transaction documentation](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/transactions)
+and [connection-string options](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/connection-strings).
