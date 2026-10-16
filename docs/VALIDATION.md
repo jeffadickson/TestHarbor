@@ -2,7 +2,10 @@
 
 ## Current implementation — 2026-10-16
 
-Six additional explicit injection diagnostic probes cover nested missing dependencies,
+Five collection injection cases verify order, scoped identity, transient lifetimes, empty
+collections and parallel isolation. Two collection failure probes verify partial-graph cleanup.
+
+Six original explicit injection diagnostic probes cover nested missing dependencies,
 cycles, factory exceptions/nulls/skips and constructor graph failures with scope cleanup.
 
 Eight software-only checkout comparison cases now verify transitive constructor/method
@@ -12,7 +15,7 @@ Four ownership-audit regressions verify empty-resource sessions, retained FIFO w
 detached read-only evidence, duplicate owner labels and quarantine-only idle state.
 See [ownership audit](OWNERSHIP-AUDIT.md).
 
-The normal suite now has 113 passing cases (60 library and 53 examples). The optional injection
+The normal suite now has 118 passing cases (60 library and 58 examples). The optional injection
 package adds eight normal cases and an external verifier with discovery-only activation guards,
 filtered identity replay, ten fresh attempt scopes, seventeen deliberate failure/skip/cancellation
 cases and three invalid declarations. Exact lifecycle streams and post-release quarantine states

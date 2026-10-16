@@ -23,15 +23,30 @@ internal static class InjectionRuntime
     internal static TestSession Session(object fixture) => Sessions.TryGetValue(fixture, out var session)
         ? session : throw new InvalidOperationException("No active injection session exists for this fixture.");
 
-    /// <summary>Resolves exactly one registration and reports parameter identity without printing values.</summary>
+    /// <summary>Resolves a singular dependency or an ordered service collection with parameter diagnostics.</summary>
     /// <param name="session">Session owning the service graph.</param>
     /// <param name="parameter">Constructor or method dependency.</param>
-    /// <returns>The sole registered non-null service.</returns>
+    /// <returns>The sole non-null service, or a materialized collection of non-null services.</returns>
     internal static object Resolve(TestSession session, ParameterInfo parameter)
     {
         object?[] matches;
-        try { matches = session.Services.GetServices(parameter.ParameterType).ToArray(); }
-        catch (Exception error) when (error is not ResultStateException and not OperationCanceledException)
+        try
+        {
+            if (parameter.ParameterType.IsGenericType &&
+                parameter.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            {
+                var elementType = parameter.ParameterType.GetGenericArguments()[0];
+                var collection = (System.Collections.IEnumerable)session.Services.GetRequiredService(parameter.ParameterType);
+                var elements = collection.Cast<object?>().ToArray();
+                if (elements.Any(x => x is null))
+                    throw new InjectionResolutionException(parameter, "a collection factory returned a null element");
+                var result = Array.CreateInstance(elementType, elements.Length);
+                for (var i = 0; i < elements.Length; i++) result.SetValue(elements[i], i);
+                return result;
+            }
+            matches = session.Services.GetServices(parameter.ParameterType).ToArray();
+        }
+        catch (Exception error) when (error is not ResultStateException and not OperationCanceledException and not InjectionResolutionException)
         {
             throw new InjectionResolutionException(parameter, "dependency activation failed; inspect the inner exception for the dependency chain", error);
         }

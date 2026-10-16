@@ -74,3 +74,5 @@ Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). Implementation and CL
 - [x] TH-029 — Software-only NUnit versus injected checkout comparison, parallel isolation and filtered replay ([#30](https://github.com/jeffadickson/TestHarbor/issues/30)); see [walkthrough](INJECTION-CHECKOUT.md).
 
 - [x] TH-030 — Contextual injection graph diagnostics with preserved causes and runner cleanup probes ([#31](https://github.com/jeffadickson/TestHarbor/issues/31)); see [requirements](NUNIT-INJECTION.md#diagnostic-requirements--th-030--issue-31).
+
+- [x] TH-031 — Constructor/method collection injection with scoped identity and partial-graph cleanup ([#32](https://github.com/jeffadickson/TestHarbor/issues/32)); see [requirements](NUNIT-INJECTION.md#collection-injection--th-031--issue-32).

@@ -73,7 +73,9 @@ registrations retain normal DI semantics and may produce different instances.
 
 Constructor parameters are all services. Method parameters are data unless explicitly marked
 `[FromServices]`; service parameters may appear before, between or after data parameters. Exactly
-one registration is required for each injected dependency, and null resolutions are rejected.
+one registration is required for each singular injected dependency, and null resolutions are rejected.
+`IEnumerable<T>` parameters instead receive the container's ordered collection of services;
+see collection injection below.
 Runtime parameter resolution failures throw `InjectionResolutionException` with declaring type, member, parameter
 name and requested service type. Missing registrations, ambiguous registrations and null factories
 have distinct explanations. A missing transitive dependency, circular graph or throwing factory
@@ -192,3 +194,31 @@ cannot establish those interactions. No IDE plugin is provided or required by th
 The external verifier runs six additional explicit diagnostic probes. Five must fail with
 contextual diagnostics and one must remain skipped. These are separate from the seventeen
 existing lifecycle probes and do not change the normal passing-case count.
+
+## Collection injection — TH-031 / issue #32
+
+Constructor parameters and `[FromServices]` method parameters may use `IEnumerable<T>`.
+With ordinary element registrations, every registered implementation is included in registration
+order, and no registrations produce an empty collection. A singular `T` still requires exactly
+one registration; choosing a collection is explicit rather than silently choosing one implementation.
+
+The runnable `InjectionCollectionTests` example registers two checkout rules under `ICheckoutRule`.
+Its constructor receives both rules, and its test method receives the same scoped elements while
+NUnit binds the quantity and expected outcome. Parallel cases get independent rule state.
+Transient elements are newly resolved at each injection boundary, as with normal Microsoft DI.
+
+TestHarbor asks Microsoft DI to resolve `IEnumerable<T>`, enumerates it once, rejects null elements,
+and supplies a typed array through the declared interface. An explicitly registered collection
+therefore follows the container's resolution policy. Custom iterator errors retain parameter
+context and their original cause. DI owns the services it creates; materializing a collection does
+not adopt ownership of externally created objects. Collection object identity is not promised.
+Arrays and `IReadOnlyList<T>` are not automatically synthesized for other parameter types.
+
+- [x] Resolve constructor/method collections, including empty collections.
+- [x] Preserve order and scoped/transient lifetime semantics without weakening singular ambiguity checks.
+- [x] Reject null elements with contextual diagnostics; retain activation failure causes.
+- [x] Prove cleanup of an earlier disposable element when a later element fails or returns null.
+- [x] Exercise software-only checkout validation, parallel isolation and normal NUnit data binding.
+
+Five passing collection cases and two additional deliberate failure probes run in the full
+verification pipeline. The diagnostic probe total is now eight; the original six are retained.

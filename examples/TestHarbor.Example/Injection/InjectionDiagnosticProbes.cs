@@ -8,6 +8,14 @@ namespace TestHarbor.Example.Injection;
 [HarborInjectedFixture(typeof(DiagnosticProfile)), Explicit("Verified by verify_injection.py.")]
 public sealed class InjectionDiagnosticProbes
 {
+    /// <summary>Must clean an earlier element when a later collection factory fails.</summary>
+    /// <param name="service">Collection containing a failing factory after a disposable element.</param>
+    [Test] public void CollectionFails([FromServices] IEnumerable<ICollectionProbe> service) => Assert.Fail("unreachable-body");
+
+    /// <summary>Must reject a null collection element and clean already-created elements.</summary>
+    /// <param name="service">Collection containing a null factory result.</param>
+    [Test] public void CollectionNull([FromServices] IEnumerable<ICollectionProbe> service) => Assert.Fail("unreachable-body");
+
     /// <summary>Must report the missing dependency below the injected service.</summary>
     /// <param name="service">Service with an unregistered constructor dependency.</param>
     [Test] public void NestedMissing([FromServices] BrokenGraph service) => Assert.Fail("unreachable-body");
@@ -49,6 +57,10 @@ public sealed class DiagnosticProfile : OrderProfile
     public override void Configure(IServiceCollection services)
     {
         base.Configure(services);
+        services.AddScoped<ICollectionProbe, CollectionProbe>();
+        services.AddScoped<ICollectionProbe>(_ =>
+            TestContext.CurrentContext.Test.MethodName == "CollectionNull" ? null! :
+                throw new IOException("collection-error-marker"));
         services.AddScoped<BrokenGraph>(provider => ActivatorUtilities.CreateInstance<BrokenGraph>(provider));
         services.AddScoped(typeof(CircularGraph<>));
         services.AddScoped<NullService>(_ => null!);
@@ -82,3 +94,14 @@ public sealed class FactoryService;
 
 /// <summary>Identifies a service whose registered factory incorrectly returns null.</summary>
 public sealed class NullService;
+
+/// <summary>Identifies collection entries used by deliberate failure probes.</summary>
+public interface ICollectionProbe;
+
+/// <summary>Records disposal of a collection element created before a later resolution failure.</summary>
+/// <param name="store">Existing lifecycle evidence recorder.</param>
+public sealed class CollectionProbe(OrderStore store) : ICollectionProbe, IDisposable
+{
+    /// <summary>Records cleanup independently of whether the collection reached the test body.</summary>
+    public void Dispose() => store.Record("collection-dispose");
+}

@@ -120,7 +120,7 @@ print('PASS: injection discovery without activation; 8 cases/10 fresh attempts; 
 print(f'Evidence: {output}')
 
 folder, diagnostics = run('diagnostics', 'FullyQualifiedName~InjectionDiagnosticProbes|FullyQualifiedName~InjectionConstructorDiagnostic', expected_exit=1)
-assert len(diagnostics) == 6, [x.attrib for x in diagnostics]
+assert len(diagnostics) == 8, [x.attrib for x in diagnostics]
 for item in diagnostics:
     name = item.attrib['testName']
     message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
@@ -135,10 +135,20 @@ for item in diagnostics:
     assert member in message, message
     expected = {'NestedMissing': 'MissingDependency', 'ConstructorGraphFails': 'MissingDependency',
                 'Circular': 'circular dependency', 'FactoryFails': 'factory-error-marker',
-                'FactoryNull': 'factory returned null'}[name]
+                'FactoryNull': 'factory returned null', 'CollectionFails': 'collection-error-marker',
+                'CollectionNull': 'null element'}[name]
     assert expected in message, message
 streams, finished = evidence(folder)
-assert len(streams) == len(finished) == 6, (len(streams), len(finished))
+assert len(streams) == len(finished) == 8, (len(streams), len(finished))
 assert all(x['quarantine'] is None for x in finished), finished
-assert all([x['phase'] for x in stream] == ['start', 'stop', 'service-dispose'] for stream in streams), streams
-print('PASS: six injection graph diagnostics retain parameter context, original cause, skip semantics and completed cleanup.')
+for stream in streams:
+    expected = ['start', 'stop']
+    if stream[0]['method'] in ('CollectionFails', 'CollectionNull'):
+        expected.append('collection-dispose')
+    expected.append('service-dispose')
+    assert [x['phase'] for x in stream] == expected, stream
+print('PASS: eight injection graph diagnostics retain parameter context, original cause, skip semantics and completed cleanup.')
+
+_, collection_results = run('collections', 'FullyQualifiedName~InjectionCollectionTests')
+assert len(collection_results) == 5 and all(x.attrib['outcome'] == 'Passed' for x in collection_results), [x.attrib for x in collection_results]
+print('PASS: collection injection preserves order, scoped identity, transient semantics, empty collections and parallel case isolation.')
