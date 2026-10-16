@@ -18,3 +18,10 @@ Evidence includes normal tests, parameterized and inherited fixtures, parallel c
 - Temporary retention uses observed failures before deletion. Use Always when later runner errors or final-observer errors must retain evidence. ArtifactStore and LifecycleJournal files remain caller-owned retained evidence.
 - Cooperative deadlines request cancellation; they never abandon cleanup or revoke active leases. Use NUnit CancelAfter for ordinary fixture test bodies; SessionBudgets.Body applies to explicit RunAsync bodies.
 - FileResourceBroker is optional and separate from the default in-process coordinator. Use one host and a trusted local filesystem; do not assume transparent coordination between the two implementations.
+
+## Planned injection integration
+
+[Injection requirements](REQUIREMENTS-INJECTION.md) define a separate optional package and a
+reviewed exception for types required by documented NUnit extension contracts. It is not yet
+implemented. Existing packages retain their current boundary. IDE compatibility must be tested
+separately from CLI CI before being claimed.

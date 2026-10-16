@@ -347,3 +347,9 @@ Verification contract: focused unit tests plus real-runner probes where discover
 ## Definition of done
 
 Each task requires a public-API-only design, explicit ownership/cancellation/error semantics, acceptance evidence, XML documentation for every authored C# declaration, generated reference updates and a green three-platform CI run. Feasibility tasks may finish with a documented no-go and supported alternative; they must not quietly introduce NUnit internals.
+
+## Follow-on injection work
+
+The approved [injection requirements v0.1](REQUIREMENTS-INJECTION.md) reopen transparent
+constructor/method injection through an optional package and a narrow NUnit extension-boundary
+exception. JG-008 remains the historical 0.3 disposition; TH-024 through TH-027 track new work.

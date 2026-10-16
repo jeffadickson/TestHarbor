@@ -57,3 +57,12 @@ The remaining JG requirements are implemented or resolved by explicit wrapper-bo
 - [x] TH-022 — File-backed SQLite cleanup rejection, persisted stale-row evidence and quarantine recovery ([issue #23](https://github.com/jeffadickson/TestHarbor/issues/23)).
 
 - [x] TH-023 — Queued export consumers during successful and failed asynchronous cleanup ([issue #24](https://github.com/jeffadickson/TestHarbor/issues/24)); see [software examples](SOFTWARE-EXAMPLES.md#5-a-consumer-already-waiting-during-export-cleanup).
+
+## Planned opt-in injection
+
+Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). These tasks remain open; 0.3 completion does not include them.
+
+- [ ] TH-024 — Runtime injection feasibility and narrow extension boundary ([#25](https://github.com/jeffadickson/TestHarbor/issues/25)).
+- [ ] TH-025 — Scoped constructor/method injection and lifecycle conformance ([#26](https://github.com/jeffadickson/TestHarbor/issues/26)).
+- [ ] TH-026 — NUnit adapter and IDE compatibility evidence ([#27](https://github.com/jeffadickson/TestHarbor/issues/27)).
+- [ ] TH-027 — Optional injection package, XML reference and walkthrough ([#28](https://github.com/jeffadickson/TestHarbor/issues/28)).

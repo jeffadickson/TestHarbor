@@ -229,3 +229,9 @@ asserted behavior, both live and in captured NUnit output.
 ```sh
 dotnet test examples/TestHarbor.Example -c Release --filter FullyQualifiedName~BenchAcceptanceTests --logger "console;verbosity=detailed"
 ```
+
+## Planned constructor and method injection
+
+[Requirements and tasks](docs/REQUIREMENTS-INJECTION.md) specify an optional NUnit injection
+package, runtime service scopes and IDE compatibility checks. This is planned work, not a shipped
+feature; ordinary NUnit and existing TestHarbor APIs retain their current behavior.
