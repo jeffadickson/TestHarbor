@@ -242,3 +242,6 @@ checks remain open. Existing fixtures are unaffected unless explicitly opted in.
 
 For explicit end-of-run leak checks, see the [ownership audit](docs/OWNERSHIP-AUDIT.md):
 report forgotten sessions and queued owners without releasing resources before cleanup.
+
+See [plain NUnit versus injected checkout tests](docs/INJECTION-CHECKOUT.md) for a
+software-only comparison of manual setup and constructor/method injection.

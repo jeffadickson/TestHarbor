@@ -3,6 +3,9 @@
 Status: implemented experimental package, `TestHarbor.NUnit.Injection`, targeting exactly NUnit
 5.0.0 and .NET 10. CLI/adapter evidence is automated; IDE interaction remains unverified.
 
+Start with the [plain NUnit versus injected checkout comparison](INJECTION-CHECKOUT.md)
+for a software-only example with business assertions and explanatory logs.
+
 ## Write an injected test
 
 Reference the injection package and use an explicit profile. These declarations are ordinary

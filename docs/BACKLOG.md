@@ -70,3 +70,5 @@ Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). Implementation and CL
 ## Ownership audit
 
 - [x] TH-028 — Opt-in end-of-run ownership audit with retained owner/waiter evidence ([#29](https://github.com/jeffadickson/TestHarbor/issues/29)); see [requirements and usage](OWNERSHIP-AUDIT.md).
+
+- [x] TH-029 — Software-only NUnit versus injected checkout comparison, parallel isolation and filtered replay ([#30](https://github.com/jeffadickson/TestHarbor/issues/30)); see [walkthrough](INJECTION-CHECKOUT.md).

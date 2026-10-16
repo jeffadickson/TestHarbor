@@ -65,6 +65,13 @@ assert len(replay) == 1 and replay[0].attrib['outcome'] == 'Passed', [x.attrib f
 assert replay[0].attrib['testId'] in {x.attrib['testId'] for x in results}, 'Filtered case identity changed'
 assert len(evidence(folder)[0]) == 1, 'Filtered run initialized unselected fixtures'
 
+_, checkout_results = run('checkout-comparison', 'FullyQualifiedName~CheckoutTests')
+assert len(checkout_results) == 8 and all(x.attrib['outcome'] == 'Passed' for x in checkout_results), [x.attrib for x in checkout_results]
+_, checkout_replay = run('checkout-filtered', 'FullyQualifiedName~InjectedCheckoutTests&Name~2700')
+assert len(checkout_replay) == 1 and checkout_replay[0].attrib['outcome'] == 'Passed', [x.attrib for x in checkout_replay]
+assert checkout_replay[0].attrib['testId'] in {x.attrib['testId'] for x in checkout_results}, 'Checkout case identity changed'
+print('PASS: eight equivalent checkout cases; injected discount case replays with stable identity.')
+
 folder, failures = run('failures', 'FullyQualifiedName~InjectionFailureProbes', expected_exit=1)
 assert len(failures) == 17, [x.attrib for x in failures]
 markers = {'ConstructorFails': 'constructor-marker', 'StartupFails': 'startup-marker', 'SetupFails': 'setup-marker',
