@@ -33,6 +33,12 @@ internal sealed class InjectedMethod(Type type, MethodInfo method) : NUnitMethod
     IParameterInfo[] IMethodInfo.GetParameters() => GetParameters()
         .Where(p => !InjectionRuntime.IsServiceParameter(p.ParameterInfo)).ToArray();
 
+    /// <summary>Closes generic case methods while retaining service binding and attempt cleanup.</summary>
+    /// <param name="typeArguments">Concrete method type arguments selected by NUnit.</param>
+    /// <returns>A closed injection descriptor over the original executable method.</returns>
+    IMethodInfo IMethodInfo.MakeGenericMethod(params Type[] typeArguments) =>
+        new InjectedMethod(TypeInfo.Type, MethodInfo.MakeGenericMethod(typeArguments));
+
     /// <summary>Supplies service parameters immediately before NUnit invokes the original method.</summary>
     /// <param name="fixture">Attempt-local injected fixture.</param>
     /// <param name="args">Case data validated by NUnit; attribute conversions are completed for visible data parameters.</param>

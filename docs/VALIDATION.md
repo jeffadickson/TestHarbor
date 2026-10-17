@@ -2,6 +2,14 @@
 
 ## Current implementation — 2026-10-17
 
+TH-035 adds 32 generic method cases with independent evidence for 36 service disposals,
+retry/repeat isolation, named-case replay, two invalid generic declarations and three runtime
+resolution failures. The normal suite has 216 passing cases (60 library and 156 examples), plus
+two intentional skips. The clean package consumer requires 11 passing results. Active CI targets
+are Linux and Windows; macOS was disabled by user direction. See [generic injection](GENERIC-INJECTION.md).
+
+## Previous argument/provider milestone — TH-034
+
 Twenty further iterations add 20 passing argument/provider cases, two deliberately ignored
 activation guards and four deliberate failure probes. Optional/params data and the built-in
 scoped provider are supported. The clean package consumer requires eight actual passing results.

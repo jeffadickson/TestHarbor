@@ -50,7 +50,7 @@ Use `python3` where that is your Python command. The runner checks the SDK selec
 `global.json`, restores locked dependencies, builds, tests, audits XML documentation,
 checks deliberate failures and cross-process behavior, generates API documentation,
 builds all four packages, and runs a clean package consumer. It stops at the first failure.
-CI uses this same command on Linux, Windows and macOS.
+CI uses this same command on Linux and Windows. macOS is not an active CI target.
 
 Use `python tools/verify.py --doctor` to check prerequisites only. `DOTNET` can name an
 alternate .NET executable. See [contributor setup](CONTRIBUTING.md) for focused development
@@ -253,3 +253,5 @@ Injected tests also support NUnit parameter-based data generation; see the
 [local data compatibility walkthrough](docs/INJECTION-DATA-COMPATIBILITY.md).
 
 Injection also preserves [ordinary NUnit arguments and sources](docs/INJECTION-ARGUMENT-COMPATIBILITY.md), including optional defaults, `params` arrays, expected results and cancellation tokens. Constructor and method injection can request the current scope’s `IServiceProvider`.
+
+[Generic injected tests](docs/GENERIC-INJECTION.md) let one typed software contract run against multiple application types, with NUnit selecting case types and TestHarbor resolving and disposing the matching services.

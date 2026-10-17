@@ -114,7 +114,7 @@ its C# testing tooling. These are validation targets, not current compatibility 
   deterministic rerun IDs, categories, parameterized names, attachments and final results.
 - In each target IDE, record exact IDE/runtime/extension/adapter versions and check discovery,
   running one selected case, rerun, source navigation, constructor/body breakpoints and async stacks.
-- Record unsupported or untested combinations explicitly. Three-platform CLI CI does not establish
+- Record unsupported or untested combinations explicitly. CLI CI does not establish
   IDE test-explorer or debugger compatibility. Document any required adapter/tool configuration.
 - Use the existing NUnit runner/adapter; no custom IDE plugin or test adapter is part of this scope.
 
@@ -127,7 +127,7 @@ P1; TH-027, [issue #28](https://github.com/jeffadickson/TestHarbor/issues/28).
   generated API reference with XML documentation on every authored/generated C# declaration.
 - Provide a software example with constructor injection and mixed data/service parameters, plus
   a failure example explaining scope cleanup and quarantine. Clearly distinguish proposed syntax.
-- Run existing and new verification gates on Linux, Windows and macOS for every implementation
+- Run existing and new verification gates on Linux and Windows for every implementation
   commit; maintain a separate explicit checklist for IDE checks that CI cannot exercise.
 
 ## Task sequence
@@ -143,3 +143,6 @@ The 0.3 explicit `ServiceInvocation` API remains supported. JG-008's earlier res
 for the original architecture; this proposal reopens transparent injection under the newly approved
 narrow extension boundary. Runtime-generated test trees and multi-host coordination are not added
 by this decision.
+
+Generic method support is specified and verified by [TH-035](GENERIC-INJECTION.md).
+macOS CI was disabled by user direction; historical three-platform evidence remains historical.

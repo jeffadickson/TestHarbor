@@ -118,7 +118,7 @@ user work or releases ownership while cleanup is active. Join child tasks before
 ## Deliberately restricted initial surface
 
 - Exactly one public constructor; no constructor case-data binding.
-- Instance, non-generic test methods. Ordinary optional data and `params` arrays are supported; ref/out parameters and optional/params services remain unsupported.
+- Instance test methods, including generic methods closed by NUnit using case data or explicit `TypeArgs`. Ordinary optional data and `params` arrays are supported; ref/out parameters and optional/params services remain unsupported.
 - Ordinary Test/TestCase/TestCaseSource and NUnit's own return-type validation. Values, Range,
   Combinatorial, Pairwise and Sequential work on ordinary data parameters. Service parameters
   cannot also declare parameter-level case data.
@@ -241,3 +241,11 @@ provider keys still require a matching registration; they never fall back to the
 
 See [twenty iteration requirements and evidence](INJECTION-ARGUMENT-COMPATIBILITY.md)
 for source metadata, ignored activation guards, package coverage and software examples.
+
+## Generic methods — TH-035
+
+NUnit owns inference, explicit `TypeArgs`, constraint checking and case naming. TestHarbor preserves
+its injection descriptor when NUnit closes a generic method, so service types are resolved only
+after substitution and the cleanup wrapper remains attached. A type appearing only in service
+parameters cannot be inferred from data; provide explicit `TypeArgs`. Open generic fixture classes
+remain unsupported. See [requirements, examples and twenty-iteration evidence](GENERIC-INJECTION.md).

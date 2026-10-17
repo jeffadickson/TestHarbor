@@ -122,6 +122,23 @@ public sealed class InjectedConsumer(ConsumerService service, [FromKeyedServices
     public void Provider([FromServices] IServiceProvider provider)
     { Assert.That(provider.GetRequiredService<ConsumerService>(), Is.SameAs(service)); }
 
+    /// <summary>Checks generic method closure retains installed-package service injection.</summary>
+    /// <typeparam name="T">Case-inferred value type.</typeparam>
+    /// <param name="value">Ordinary data selecting the repository type.</param>
+    /// <param name="repository">Closed generic service.</param>
+    /// <param name="same">Constructor service retained through generic closure.</param>
+    [TestCase(7), TestCase("book")]
+    public void GenericService<T>(T value, [FromServices] ConsumerRepository<T> repository, [FromServices] ConsumerService same)
+    { Assert.That(same, Is.SameAs(service)); repository.Values.Add(value); Assert.That(repository.Values.Single(), Is.EqualTo(value)); }
+
+    /// <summary>Checks installed generic reflection views support params preparation.</summary>
+    /// <typeparam name="T">Case-inferred element type.</typeparam>
+    /// <param name="same">Keyed service excluded from generic inference.</param>
+    /// <param name="values">Packed ordinary data.</param>
+    [TestCase(1, 2, 3)]
+    public void GenericParams<T>([FromKeyedServices("selected")] ConsumerService same, params T[] values)
+    { Assert.That(same, Is.SameAs(keyed)); Assert.That(values, Is.EqualTo(new[] { 1, 2, 3 })); }
+
     /// <summary>Checks mixed binding and shared constructor/method scope identity.</summary>
     /// <param name="input">Ordinary case data.</param>
     /// <param name="same">Method-injected service.</param>
@@ -137,11 +154,20 @@ public sealed class ConsumerProfile : InjectionProfile
     public override void Configure(IServiceCollection services)
     {
         services.AddScoped<ConsumerService>();
+        services.AddScoped(typeof(ConsumerRepository<>));
         services.AddKeyedScoped<ConsumerService>("selected");
     }
 }
 /// <summary>Provides a scope identity for package verification.</summary>
 public sealed class ConsumerService;
+/// <summary>Stores values for installed-package generic binding verification.</summary>
+/// <typeparam name="T">Type selected by NUnit case inference.</typeparam>
+public sealed class ConsumerRepository<T>
+{
+    /// <summary>Gets attempt-local values.</summary>
+    /// <value>An initially empty collection.</value>
+    public List<T> Values { get; } = new();
+}
 ''')
     # A config file preserves URI syntax across platform-specific CLI source parsing.
     config = ET.Element('configuration')
@@ -160,5 +186,5 @@ public sealed class ConsumerService;
         result = subprocess.run(args, cwd=folder, env=consumer_environment, capture_output=True, text=True, timeout=180)
         assert result.returncode == 0, result.stdout + result.stderr
     results = ET.parse(folder / 'results/consumer.trx').findall('.//{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}UnitTestResult')
-    assert len(results) == 8 and all(x.attrib['outcome'] == 'Passed' for x in results), [x.attrib for x in results]
+    assert len(results) == 11 and all(x.attrib['outcome'] == 'Passed' for x in results), [x.attrib for x in results]
     print('PASS: scoped NUnit boundary allowlist, packaged XML docs and clean package consumer injection execution.')

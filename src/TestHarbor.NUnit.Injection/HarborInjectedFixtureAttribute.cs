@@ -77,9 +77,9 @@ public sealed class HarborInjectedFixtureAttribute(Type profileType) : NUnitAttr
     /// <returns>An actionable error, or null.</returns>
     private static string? ValidateMethod(MethodInfo method)
     {
-        if (method.IsStatic || method.IsGenericMethod || method.GetParameters().Any(p => p.ParameterType.IsByRef ||
+        if (method.IsStatic || method.GetParameters().Any(p => p.ParameterType.IsByRef ||
                 (InjectionRuntime.IsServiceParameter(p) && (p.IsOptional || p.IsDefined(typeof(ParamArrayAttribute))))))
-            return $"{method.Name}: injected tests require instance, non-generic methods without ref/out parameters or optional/params services.";
+            return $"{method.Name}: injected tests require instance methods without ref/out parameters or optional/params services.";
         if (method.GetCustomAttributes(true).OfType<IWrapSetUpTearDown>().Any() || method.IsDefined(typeof(ApartmentAttribute), true))
             return $"{method.Name}: custom setup/teardown wrappers and apartment-bound execution are unsupported with injection.";
         return ValidateServiceMarkers(method.GetParameters());

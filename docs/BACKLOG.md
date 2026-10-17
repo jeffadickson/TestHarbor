@@ -84,3 +84,5 @@ Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). Implementation and CL
 - [x] TH-033 — Ten local NUnit data/injection compatibility iterations: parameter data, async sources, ValueTask, inherited generic contracts, conversion and package verification. [Requirements and evidence](INJECTION-DATA-COMPATIBILITY.md). Included in the TH-034 publication.
 
 - [x] TH-034 — Twenty further argument/provider compatibility iterations, strict runner evidence and clean package acceptance. [Requirements and evidence](INJECTION-ARGUMENT-COMPATIBILITY.md).
+
+- [x] TH-035 — Twenty generic method iterations covering inference, explicit types, typed/keyed/collection services, async results, lifecycle evidence and installed packages. [Requirements and evidence](GENERIC-INJECTION.md).

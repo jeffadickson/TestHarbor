@@ -62,6 +62,15 @@ internal sealed class DataMethodInfo(MethodInfo method) : MethodInfo
     /// <summary>Returns original generic arguments.</summary>
     /// <returns>The original generic method arguments.</returns>
     public override Type[] GetGenericArguments() => method.GetGenericArguments();
+    /// <summary>Closes the data signature when NUnit prepares generic optional or params arguments.</summary>
+    /// <param name="typeArguments">Concrete type arguments chosen by NUnit.</param>
+    /// <returns>A data-only view of the closed original method.</returns>
+    public override MethodInfo MakeGenericMethod(params Type[] typeArguments) =>
+        new DataMethodInfo(method.MakeGenericMethod(typeArguments));
+    /// <summary>Returns a data-only view of the original generic definition.</summary>
+    /// <returns>The generic definition retaining the service-parameter filter.</returns>
+    public override MethodInfo GetGenericMethodDefinition() => new DataMethodInfo(method.GetGenericMethodDefinition());
+
     /// <summary>Returns original attributes used for async detection and NUnit metadata.</summary>
     /// <param name="inherit">Whether inherited attributes are included.</param>
     /// <returns>The original attributes.</returns>
