@@ -23,12 +23,22 @@ internal static class InjectionRuntime
     internal static TestSession Session(object fixture) => Sessions.TryGetValue(fixture, out var session)
         ? session : throw new InvalidOperationException("No active injection session exists for this fixture.");
 
+    /// <summary>Identifies explicit service parameters without resolving them during discovery.</summary>
+    /// <param name="parameter">The reflected test method parameter.</param>
+    /// <returns>Whether the parameter requests keyed or unkeyed injection.</returns>
+    internal static bool IsServiceParameter(ParameterInfo parameter) =>
+        parameter.IsDefined(typeof(FromServicesAttribute)) || parameter.IsDefined(typeof(FromKeyedServicesAttribute));
+
     /// <summary>Resolves a singular dependency or an ordered service collection with parameter diagnostics.</summary>
     /// <param name="session">Session owning the service graph.</param>
     /// <param name="parameter">Constructor or method dependency.</param>
     /// <returns>The sole non-null service, or a materialized collection of non-null services.</returns>
     internal static object Resolve(TestSession session, ParameterInfo parameter)
     {
+        var keyed = parameter.GetCustomAttribute<FromKeyedServicesAttribute>();
+        // Microsoft DI exposes its scope provider intrinsically, not as an enumerable registration.
+        if (parameter.ParameterType == typeof(IServiceProvider) && (keyed is null || keyed.Key is null))
+            return session.Services;
         object?[] matches;
         try
         {
@@ -36,7 +46,9 @@ internal static class InjectionRuntime
                 parameter.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
             {
                 var elementType = parameter.ParameterType.GetGenericArguments()[0];
-                var collection = (System.Collections.IEnumerable)session.Services.GetRequiredService(parameter.ParameterType);
+                var collection = (System.Collections.IEnumerable)(keyed is null
+                    ? session.Services.GetRequiredService(parameter.ParameterType)
+                    : session.Services.GetRequiredKeyedService(parameter.ParameterType, keyed.Key));
                 var elements = collection.Cast<object?>().ToArray();
                 if (elements.Any(x => x is null))
                     throw new InjectionResolutionException(parameter, "a collection factory returned a null element");
@@ -44,7 +56,9 @@ internal static class InjectionRuntime
                 for (var i = 0; i < elements.Length; i++) result.SetValue(elements[i], i);
                 return result;
             }
-            matches = session.Services.GetServices(parameter.ParameterType).ToArray();
+            matches = keyed is null
+                ? session.Services.GetServices(parameter.ParameterType).ToArray()
+                : session.Services.GetKeyedServices(parameter.ParameterType, keyed.Key).ToArray();
         }
         catch (Exception error) when (error is not ResultStateException and not OperationCanceledException and not InjectionResolutionException)
         {

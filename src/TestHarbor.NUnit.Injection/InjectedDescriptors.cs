@@ -21,20 +21,27 @@ internal sealed class InjectedType(Type type, Type profile) : NUnitTypeWrapper(t
 /// <param name="method">Original method, retained for source navigation and async detection.</param>
 internal sealed class InjectedMethod(Type type, MethodInfo method) : NUnitMethodWrapper(type, method), IMethodInfo
 {
+    /// <summary>Retains a reflection view with only the parameters supplied by case data.</summary>
+    private readonly MethodInfo dataMethod = new DataMethodInfo(method);
+
+    /// <summary>Gets the data-only reflection signature used by NUnit's argument preparation.</summary>
+    /// <value>A delegating view retaining the original method identity and async metadata.</value>
+    MethodInfo IMethodInfo.MethodInfo => dataMethod;
+
     /// <summary>Exposes only case-data parameters to NUnit discovery and argument validation.</summary>
-    /// <returns>Original descriptors for parameters not marked FromServices.</returns>
+    /// <returns>Original descriptors for parameters without a service injection marker.</returns>
     IParameterInfo[] IMethodInfo.GetParameters() => GetParameters()
-        .Where(p => !p.ParameterInfo.IsDefined(typeof(FromServicesAttribute))).ToArray();
+        .Where(p => !InjectionRuntime.IsServiceParameter(p.ParameterInfo)).ToArray();
 
     /// <summary>Supplies service parameters immediately before NUnit invokes the original method.</summary>
     /// <param name="fixture">Attempt-local injected fixture.</param>
-    /// <param name="args">Case data already validated and converted by NUnit.</param>
+    /// <param name="args">Case data validated by NUnit; attribute conversions are completed for visible data parameters.</param>
     /// <returns>The original return value, including an awaitable handled by NUnit itself.</returns>
     object? IMethodInfo.Invoke(object? fixture, params object?[]? args)
     {
         var session = InjectionRuntime.Session(fixture!);
         var index = 0;
-        var bound = MethodInfo.GetParameters().Select(p => p.IsDefined(typeof(FromServicesAttribute))
+        var bound = MethodInfo.GetParameters().Select(p => InjectionRuntime.IsServiceParameter(p)
             ? InjectionRuntime.Resolve(session, p)
             : args![index++]).ToArray();
         return Invoke(fixture, bound);

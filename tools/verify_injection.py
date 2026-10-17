@@ -152,3 +152,87 @@ print('PASS: eight injection graph diagnostics retain parameter context, origina
 _, collection_results = run('collections', 'FullyQualifiedName~InjectionCollectionTests')
 assert len(collection_results) == 5 and all(x.attrib['outcome'] == 'Passed' for x in collection_results), [x.attrib for x in collection_results]
 print('PASS: collection injection preserves order, scoped identity, transient semantics, empty collections and parallel case isolation.')
+
+_, keyed_results = run('keyed', 'FullyQualifiedName~InjectionKeyed')
+assert len(keyed_results) == 8 and all(x.attrib['outcome'] == 'Passed' for x in keyed_results), [x.attrib for x in keyed_results]
+_, keyed_replay = run('keyed-filtered', 'FullyQualifiedName~InjectionKeyedMethodTests.RoutesData&Name~read')
+assert len(keyed_replay) == 1 and keyed_replay[0].attrib['outcome'] == 'Passed', [x.attrib for x in keyed_replay]
+assert keyed_replay[0].attrib['testId'] in {x.attrib['testId'] for x in keyed_results}, 'Keyed case identity changed'
+folder, keyed_failures = run('keyed-failures', 'FullyQualifiedName~KeyedFailureProbes', expected_exit=1)
+assert len(keyed_failures) == 5, [x.attrib for x in keyed_failures]
+for item in keyed_failures:
+    message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    assert item.attrib['outcome'] == 'Failed' and 'InjectionResolutionException' in message, message
+    assert "parameter 'service'" in message and 'unreachable-body' not in message, message
+    expected = {'MissingKey': 'found 0', 'DuplicateKey': 'found 2', 'NullKeyedService': 'factory returned null',
+                'KeyedCollectionFails': 'keyed-collection-marker', 'KeyedCollectionNull': 'null element'}[item.attrib['testName']]
+    assert expected in message, message
+streams, finished = evidence(folder)
+assert len(streams) == len(finished) == 5 and all(x['quarantine'] is None for x in finished), finished
+for stream in streams:
+    expected = ['start', 'stop']
+    if stream[0]['method'].startswith('KeyedCollection'):
+        expected.append('collection-dispose')
+    expected.append('service-dispose')
+    assert [x['phase'] for x in stream] == expected, stream
+folder, keyed_invalid = run('keyed-invalid', 'FullyQualifiedName~KeyedInvalid', expected_exit=1)
+assert len(keyed_invalid) == 3 and all(x.attrib['outcome'] == 'Failed' for x in keyed_invalid), [x.attrib for x in keyed_invalid]
+for item in keyed_invalid:
+    message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    assert any(marker in message for marker in ('not both', 'explicit key', 'ServiceKey is unsupported')), message
+    assert 'unreachable' not in message, message
+print('PASS: eight keyed cases, stable filtered replay, five cleanup/failure probes and three invalid declarations.')
+
+_, data_results = run('data-compatibility', 'FullyQualifiedName~InjectionDataCompatibilityTests|FullyQualifiedName~InjectionValueTaskTests|FullyQualifiedName~InjectionGenericContractTests|FullyQualifiedName~PlainDataConversionTests')
+assert len(data_results) == 38 and all(x.attrib['outcome'] == 'Passed' for x in data_results), [x.attrib for x in data_results]
+assert all('KeyedEndpoint' not in x.attrib['testName'] for x in data_results), 'Service leaked into case identity'
+
+
+def observed_rows(results, prefix):
+    """Read each case's observations once, excluding duplicated run-level output."""
+    rows = []
+    for result in results:
+        for line in result.findtext('t:Output/t:StdOut', '', ns).splitlines():
+            if line.startswith(prefix):
+                rows.append(json.loads(line[len(prefix):]))
+    return rows
+
+
+import itertools
+pairwise = observed_rows(data_results, 'PAIRWISE:')
+assert len(pairwise) == 4, pairwise
+axes = [['east', 'west'], [1, 2], [False, True]]
+for a, b in itertools.combinations(range(3), 2):
+    assert {(row[a], row[b]) for row in pairwise} == set(itertools.product(axes[a], axes[b])), pairwise
+automatic = observed_rows(data_results, 'AUTOMATIC:')
+assert len(automatic) == 6 and {tuple(row) for row in automatic} == set(itertools.product([0, 1], [None, False, True])), automatic
+_, source_replay = run('async-source-filtered', 'FullyQualifiedName~InjectionDataCompatibilityTests.TaskSource&Name~TaskSourceTwo')
+assert len(source_replay) == 1 and source_replay[0].attrib['outcome'] == 'Passed', [x.attrib for x in source_replay]
+assert source_replay[0].attrib['testId'] in {x.attrib['testId'] for x in data_results}, 'Async source case identity changed'
+_, invalid_data = run('invalid-data-services', 'FullyQualifiedName~DataBindingInvalid', expected_exit=1)
+assert len(invalid_data) == 3, [x.attrib for x in invalid_data]
+for item in invalid_data:
+    message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    assert item.attrib['outcome'] == 'Failed' and 'service parameters cannot also declare' in message, message
+    assert 'unreachable' not in message, message
+print('PASS: 38 data/async/inheritance cases, exhaustive pair coverage, nullable enum expansion, stable async-source replay and three invalid service/data declarations.')
+
+_, argument_results = run('arguments', 'FullyQualifiedName~InjectionArgumentTests')
+assert len(argument_results) == 20 and all(x.attrib['outcome'] == 'Passed' for x in argument_results), [x.attrib for x in argument_results]
+assert all('KeyedEndpoint' not in x.attrib['testName'] and 'IServiceProvider' not in x.attrib['testName'] for x in argument_results), 'Service leaked into argument case names'
+_, category_replay = run('argument-category', 'TestCategory=InjectionMetadata')
+assert len(category_replay) == 1 and category_replay[0].attrib['outcome'] == 'Passed', [x.attrib for x in category_replay]
+assert category_replay[0].attrib['testName'] == 'NamedCategory', category_replay[0].attrib
+assert category_replay[0].attrib['testId'] in {x.attrib['testId'] for x in argument_results}, 'Category replay changed case identity'
+_, ignored = run('ignored-activation', 'FullyQualifiedName~InjectionIgnoredTests')
+assert len(ignored) == 2 and all(x.attrib['outcome'] == 'NotExecuted' for x in ignored), [x.attrib for x in ignored]
+_, invalid_arguments = run('invalid-arguments', 'FullyQualifiedName~InjectionArgumentInvalid', expected_exit=1)
+assert len(invalid_arguments) == 4, [x.attrib for x in invalid_arguments]
+for item in invalid_arguments:
+    message = item.findtext('t:Output/t:ErrorInfo/t:Message', '', ns)
+    assert item.attrib['outcome'] == 'Failed' and 'unreachable-body' not in message, message
+    if item.attrib['testName'] == 'KeyedProvider':
+        assert 'expected exactly one registration; found 0' in message, message
+    else:
+        assert 'without ref/out parameters or optional/params services' in message, message
+print('PASS: 20 argument/provider cases, category replay identity, two ignored activation guards and four unsupported declaration/key probes.')

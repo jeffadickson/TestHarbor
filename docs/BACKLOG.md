@@ -76,3 +76,11 @@ Requirements: [injection v0.1](REQUIREMENTS-INJECTION.md). Implementation and CL
 - [x] TH-030 — Contextual injection graph diagnostics with preserved causes and runner cleanup probes ([#31](https://github.com/jeffadickson/TestHarbor/issues/31)); see [requirements](NUNIT-INJECTION.md#diagnostic-requirements--th-030--issue-31).
 
 - [x] TH-031 — Constructor/method collection injection with scoped identity and partial-graph cleanup ([#32](https://github.com/jeffadickson/TestHarbor/issues/32)); see [requirements](NUNIT-INJECTION.md#collection-injection--th-031--issue-32).
+
+## Injection compatibility milestones
+
+- [x] TH-032 — Five iterations of keyed constructor/method/collection injection, diagnostics and package verification. [Requirements and evidence](KEYED-INJECTION.md). Originally developed locally; included in the TH-034 publication.
+
+- [x] TH-033 — Ten local NUnit data/injection compatibility iterations: parameter data, async sources, ValueTask, inherited generic contracts, conversion and package verification. [Requirements and evidence](INJECTION-DATA-COMPATIBILITY.md). Included in the TH-034 publication.
+
+- [x] TH-034 — Twenty further argument/provider compatibility iterations, strict runner evidence and clean package acceptance. [Requirements and evidence](INJECTION-ARGUMENT-COMPATIBILITY.md).

@@ -245,3 +245,11 @@ report forgotten sessions and queued owners without releasing resources before c
 
 See [plain NUnit versus injected checkout tests](docs/INJECTION-CHECKOUT.md) for a
 software-only comparison of manual setup and constructor/method injection.
+
+Local keyed injection supports `[FromKeyedServices(key)]` on constructors and test methods;
+see [requirements, examples and five-iteration evidence](docs/KEYED-INJECTION.md).
+
+Injected tests also support NUnit parameter-based data generation; see the
+[local data compatibility walkthrough](docs/INJECTION-DATA-COMPATIBILITY.md).
+
+Injection also preserves [ordinary NUnit arguments and sources](docs/INJECTION-ARGUMENT-COMPATIBILITY.md), including optional defaults, `params` arrays, expected results and cancellation tokens. Constructor and method injection can request the current scope’s `IServiceProvider`.

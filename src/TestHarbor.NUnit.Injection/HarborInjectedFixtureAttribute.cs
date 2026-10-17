@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnitTestSuite = NUnit.Framework.Internal.TestSuite;
@@ -68,7 +69,7 @@ public sealed class HarborInjectedFixtureAttribute(Type profileType) : NUnitAttr
             return "Injected constructors do not support optional, ref/out or params parameters.";
         if (type.IsDefined(typeof(ApartmentAttribute), true) || type.Assembly.IsDefined(typeof(ApartmentAttribute)))
             return "Apartment-bound injection is unsupported; runtime activation uses a thread-pool bridge.";
-        return null;
+        return ValidateServiceMarkers(type.GetConstructors()[0].GetParameters());
     }
 
     /// <summary>Rejects signatures whose binding or execution semantics are outside the verified subset.</summary>
@@ -76,12 +77,33 @@ public sealed class HarborInjectedFixtureAttribute(Type profileType) : NUnitAttr
     /// <returns>An actionable error, or null.</returns>
     private static string? ValidateMethod(MethodInfo method)
     {
-        if (method.IsStatic || method.IsGenericMethod || method.GetParameters().Any(p => p.IsOptional || p.ParameterType.IsByRef || p.IsDefined(typeof(ParamArrayAttribute))))
-            return $"{method.Name}: injected tests require instance, non-generic methods without optional, ref/out or params parameters.";
+        if (method.IsStatic || method.IsGenericMethod || method.GetParameters().Any(p => p.ParameterType.IsByRef ||
+                (InjectionRuntime.IsServiceParameter(p) && (p.IsOptional || p.IsDefined(typeof(ParamArrayAttribute))))))
+            return $"{method.Name}: injected tests require instance, non-generic methods without ref/out parameters or optional/params services.";
         if (method.GetCustomAttributes(true).OfType<IWrapSetUpTearDown>().Any() || method.IsDefined(typeof(ApartmentAttribute), true))
             return $"{method.Name}: custom setup/teardown wrappers and apartment-bound execution are unsupported with injection.";
-        if (method.GetParameters().Any(p => p.GetCustomAttributes().OfType<IParameterDataSource>().Any()))
-            return $"{method.Name}: use TestCase or TestCaseSource instead of parameter-level data sources with injection.";
+        return ValidateServiceMarkers(method.GetParameters());
+    }
+    /// <summary>Rejects conflicting selection markers and key inheritance without a parent service.</summary>
+    /// <param name="parameters">Constructor or test method parameters.</param>
+    /// <returns>An actionable declaration error, or null.</returns>
+    private static string? ValidateServiceMarkers(IEnumerable<ParameterInfo> parameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            if ((parameter.Member is ConstructorInfo || InjectionRuntime.IsServiceParameter(parameter)) &&
+                parameter.GetCustomAttributes().OfType<IParameterDataSource>().Any())
+                return $"{parameter.Member.Name} parameter '{parameter.Name}': service parameters cannot also declare parameter-level case data.";
+            if (parameter.IsDefined(typeof(ServiceKeyAttribute)))
+                return $"{parameter.Member.Name} parameter '{parameter.Name}': ServiceKey is unsupported on fixture/test parameters; no parent service key exists.";
+            var keyed = parameter.GetCustomAttribute<FromKeyedServicesAttribute>();
+            if (keyed is null) continue;
+            if (parameter.IsDefined(typeof(FromServicesAttribute)))
+                return $"{parameter.Member.Name} parameter '{parameter.Name}': choose FromServices or FromKeyedServices, not both.";
+            if (keyed.LookupMode == ServiceKeyLookupMode.InheritKey)
+                return $"{parameter.Member.Name} parameter '{parameter.Name}': FromKeyedServices requires an explicit key; fixture/test parameters cannot inherit a parent service key.";
+        }
         return null;
     }
+
 }

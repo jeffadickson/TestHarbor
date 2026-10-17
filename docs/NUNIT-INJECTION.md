@@ -72,7 +72,7 @@ A constructor and a method asking for the same scoped service receive the same i
 registrations retain normal DI semantics and may produce different instances.
 
 Constructor parameters are all services. Method parameters are data unless explicitly marked
-`[FromServices]`; service parameters may appear before, between or after data parameters. Exactly
+`[FromServices]` or `[FromKeyedServices(key)]`; service parameters may appear before, between or after data parameters. Exactly
 one registration is required for each singular injected dependency, and null resolutions are rejected.
 `IEnumerable<T>` parameters instead receive the container's ordered collection of services;
 see collection injection below.
@@ -118,9 +118,10 @@ user work or releases ownership while cleanup is active. Join child tasks before
 ## Deliberately restricted initial surface
 
 - Exactly one public constructor; no constructor case-data binding.
-- Instance, non-generic test methods; no optional, ref/out or params parameters.
-- Ordinary Test/TestCase/TestCaseSource and NUnit's own return-type validation. Parameter-level
-  Values/Range/Combinatorial data is rejected; use TestCaseSource for that data instead.
+- Instance, non-generic test methods. Ordinary optional data and `params` arrays are supported; ref/out parameters and optional/params services remain unsupported.
+- Ordinary Test/TestCase/TestCaseSource and NUnit's own return-type validation. Values, Range,
+  Combinatorial, Pairwise and Sequential work on ordinary data parameters. Service parameters
+  cannot also declare parameter-level case data.
 - InstancePerTestCase only. SingleInstance, one-time lifecycle hooks, combining fixture builders,
   deriving from HarborFixture, and custom setup/teardown command wrappers are rejected.
 - Apartment attributes are rejected. NUnit's construction hook is synchronous; the implementation
@@ -135,8 +136,9 @@ user work or releases ownership while cleanup is active. Join child tasks before
 Inspected NUnit source tag `v5.0.0`, commit `110e911227972b606241cd5782a7c8a51d2c8f9d`.
 `IFixtureBuilder` creates a normal NUnit TestFixture whose ITypeInfo redirects Construct. NUnit's
 FixturePerTestCaseCommand calls it once per attempt. An IMethodInfo implementation exposes only
-data parameters for discovery and fills service parameters during Invoke. The original MethodInfo
-is retained so NUnit still detects awaitables and records the source method. An IWrapSetUpTearDown
+data parameters for discovery and fills service parameters during Invoke. A delegating MethodInfo view
+exposes the same data-only signature to NUnit argument preparation, while retaining original
+identity and async metadata; invocation uses the original complete method. An IWrapSetUpTearDown
 command surrounds normal lifecycle/fixture disposal commands and closes the session in finally.
 NUnit's repeat/retry commands surround construction, providing a fresh attempt on each repetition.
 
@@ -222,3 +224,20 @@ Arrays and `IReadOnlyList<T>` are not automatically synthesized for other parame
 
 Five passing collection cases and two additional deliberate failure probes run in the full
 verification pipeline. The diagnostic probe total is now eight; the original six are retained.
+
+For explicit selection among implementations, see [keyed injection](KEYED-INJECTION.md).
+The five local iterations are implemented and verified without a remote push.
+
+See [ten local compatibility iterations](INJECTION-DATA-COMPATIBILITY.md) for parameter-data,
+async-source, ValueTask, inherited-contract and decimal-conversion evidence.
+
+## Ordinary arguments and scope providers — TH-034
+
+NUnit prepares optional defaults, `params` arrays, object-array packing, source rows,
+expected results and its implicit trailing cancellation token. TestHarbor supplies only
+marked service arguments, then invokes the original method. An unkeyed `IServiceProvider`
+constructor or method parameter receives the current attempt's provider. Explicit non-null
+provider keys still require a matching registration; they never fall back to the unkeyed provider.
+
+See [twenty iteration requirements and evidence](INJECTION-ARGUMENT-COMPATIBILITY.md)
+for source metadata, ignored activation guards, package coverage and software examples.

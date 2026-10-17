@@ -1,6 +1,19 @@
 # Validation
 
-## Current implementation — 2026-10-16
+## Current implementation — 2026-10-17
+
+Twenty further iterations add 20 passing argument/provider cases, two deliberately ignored
+activation guards and four deliberate failure probes. Optional/params data and the built-in
+scoped provider are supported. The clean package consumer requires eight actual passing results.
+See [the iteration ledger](INJECTION-ARGUMENT-COMPATIBILITY.md).
+
+The previous ten iterations add 38 passing data/async/inheritance cases and three invalid
+service/data declarations.
+Parameter-based NUnit data generation is now supported and decimal conversion is fixed.
+
+Five local keyed-injection iterations add eight passing cases, five deliberate failure probes,
+three invalid declarations and clean package consumer coverage. This accumulated work is included in the TH-034 publication; historical CI runs below
+describe their own commits.
 
 Five collection injection cases verify order, scoped identity, transient lifetimes, empty
 collections and parallel isolation. Two collection failure probes verify partial-graph cleanup.
@@ -15,7 +28,7 @@ Four ownership-audit regressions verify empty-resource sessions, retained FIFO w
 detached read-only evidence, duplicate owner labels and quarantine-only idle state.
 See [ownership audit](OWNERSHIP-AUDIT.md).
 
-The normal suite now has 118 passing cases (60 library and 58 examples). The optional injection
+The normal suite now has 184 passing cases (60 library and 124 examples), plus two intentional skips. The optional injection
 package adds eight normal cases and an external verifier with discovery-only activation guards,
 filtered identity replay, ten fresh attempt scopes, seventeen deliberate failure/skip/cancellation
 cases and three invalid declarations. Exact lifecycle streams and post-release quarantine states
